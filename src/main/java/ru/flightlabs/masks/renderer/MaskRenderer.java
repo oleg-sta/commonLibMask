@@ -59,6 +59,8 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     CompModel compModel;
     PoseHelper poseHelper;
     ShaderEffect shaderHelper;
+    public boolean staticView = false; // it means frame is fixed
+    PoseHelper.PoseResult poseResult;
 
     private static final String TAG = "MaskRenderer";
 
@@ -112,70 +114,71 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         int mCameraHeight = CameraHelper.mCameraHeight;
 
         if (bufferFromCamera != null && Static.libsLoaded) {
+            if (!staticView) {
+                poseResult = null;
+                synchronized (FastCameraView.class) {
+                    if (greyTemp == null) {
+                        greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
+                        grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
+                        mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
+                    }
+                    greyTemp.put(0, 0, bufferFromCamera);
 
-            PoseHelper.PoseResult poseResult = null;
-            synchronized (FastCameraView.class) {
-                if (greyTemp == null) {
-                    greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
-                    grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
-                    mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
+                    int cameraSize = mCameraWidth * mCameraHeight;
+                    if (bufferY == null) {
+                        bufferY = ByteBuffer.allocateDirect(cameraSize);
+                        bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
+                    }
+                    bufferY.put(bufferFromCamera, 0, cameraSize);
+                    bufferY.position(0);
+                    bufferUV.put(bufferFromCamera, cameraSize, cameraSize / 2);
+                    bufferUV.position(0);
+                    Log.i(TAG, "onDrawFrame2 " + bufferFromCamera[0]);
+                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[0]);
+                    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mCameraWidth, (int) (mCameraHeight), 0,
+                            GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, bufferY);
+                    GLES20.glFlush();
+                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
+                    //bufferY.position(heightSurf * widthSurf);
+                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
+                    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[1]);
+                    GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE_ALPHA, mCameraWidth / 2, (int) (mCameraHeight * 0.5), 0,
+                            GLES20.GL_LUMINANCE_ALPHA, GLES20.GL_UNSIGNED_BYTE, bufferUV);
+                    GLES20.glFlush();
+                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
+                    Log.i(TAG, "onDrawFrame3");
                 }
-                greyTemp.put(0, 0, bufferFromCamera);
-
-                int cameraSize = mCameraWidth * mCameraHeight;
-                if (bufferY == null) {
-                    bufferY = ByteBuffer.allocateDirect(cameraSize);
-                    bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
+                // if back camera
+                //Mat grey = greyTemp.t();
+                Core.transpose(greyTemp, grey);
+                if (!FastCameraView.cameraFacing) {
+                    Core.flip(grey, grey, 1);
+                } else {
+                    Core.flip(grey, grey, -1);
                 }
-                bufferY.put(bufferFromCamera, 0, cameraSize);
-                bufferY.position(0);
-                bufferUV.put(bufferFromCamera, cameraSize, cameraSize / 2);
-                bufferUV.position(0);
-                Log.i(TAG, "onDrawFrame2 " + bufferFromCamera[0]);
-                Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[0]);
-                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mCameraWidth, (int) (mCameraHeight), 0,
-                        GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, bufferY);
-                GLES20.glFlush();
-                Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
-                //bufferY.position(heightSurf * widthSurf);
-                Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[1]);
-                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE_ALPHA, mCameraWidth / 2, (int) (mCameraHeight * 0.5), 0,
-                        GLES20.GL_LUMINANCE_ALPHA, GLES20.GL_UNSIGNED_BYTE, bufferUV);
-                GLES20.glFlush();
-                Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
-                Log.i(TAG, "onDrawFrame3");
+
+                int mAbsoluteFaceSize = Math.round((int) (mCameraWidth * 0.33));
+                boolean shapeBlends = shaderHelper.needBlend();
+                poseResult = poseHelper.findShapeAndPose(grey, mAbsoluteFaceSize, mRgbaDummy, widthSurf, heightSurf, shapeBlends, shaderHelper.model, context, mCameraHeight, mCameraWidth);
+
+                // convert from NV21 to RGBA
+                GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[0]);
+                GLES20.glViewport(0, 0, widthSurf, heightSurf);
+                GLES20.glUseProgram(programNv21ToRgba);
+                int vPos = GLES20.glGetAttribLocation(programNv21ToRgba, "vPosition");
+                int vTex = GLES20.glGetAttribLocation(programNv21ToRgba, "vTexCoord");
+                GLES20.glEnableVertexAttribArray(vPos);
+                GLES20.glEnableVertexAttribArray(vTex);
+                int ufacing = GLES20.glGetUniformLocation(programNv21ToRgba, "u_facing");
+                GLES20.glUniform1i(ufacing, FastCameraView.cameraFacing ? 1 : 0);
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraWidth"), mCameraWidth);
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraHeight"), mCameraWidth);
+                Log.i(TAG, "onDrawFrame5");
+                ShaderEffectHelper.shaderEffect2dWholeScreen(new Point(0, 0), new Point(widthSurf, heightSurf), texNV21FromCamera[0], programNv21ToRgba, vPos, vTex, texNV21FromCamera[1]);
+                Log.i(TAG, "onDrawFrame6");
+
             }
-            // if back camera
-            //Mat grey = greyTemp.t();
-            Core.transpose(greyTemp, grey);
-            if (!FastCameraView.cameraFacing) {
-                Core.flip(grey, grey, 1);
-            } else {
-                Core.flip(grey, grey, -1);
-            }
-
-            int mAbsoluteFaceSize = Math.round((int) (mCameraWidth * 0.33));
-            boolean shapeBlends = shaderHelper.needBlend();
-            poseResult = poseHelper.findShapeAndPose(grey, mAbsoluteFaceSize, mRgbaDummy, widthSurf, heightSurf, shapeBlends, shaderHelper.model, context, mCameraHeight, mCameraWidth);
-
-            // convert from NV21 to RGBA
-            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[0]);
-            GLES20.glViewport(0, 0, widthSurf, heightSurf);
-            GLES20.glUseProgram(programNv21ToRgba);
-            int vPos = GLES20.glGetAttribLocation(programNv21ToRgba, "vPosition");
-            int vTex = GLES20.glGetAttribLocation(programNv21ToRgba, "vTexCoord");
-            GLES20.glEnableVertexAttribArray(vPos);
-            GLES20.glEnableVertexAttribArray(vTex);
-            int ufacing = GLES20.glGetUniformLocation(programNv21ToRgba, "u_facing");
-            GLES20.glUniform1i(ufacing, FastCameraView.cameraFacing ? 1 : 0);
-            GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraWidth"), mCameraWidth);
-            GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraHeight"), mCameraWidth);
-            Log.i(TAG, "onDrawFrame5");
-            ShaderEffectHelper.shaderEffect2dWholeScreen(new Point(0, 0), new Point(widthSurf, heightSurf), texNV21FromCamera[0], programNv21ToRgba, vPos, vTex, texNV21FromCamera[1]);
-            Log.i(TAG, "onDrawFrame6");
-
             // TODO draw debug with shaders
             if (Settings.debugMode && poseResult.foundLandmarks != null) {
                 int vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");

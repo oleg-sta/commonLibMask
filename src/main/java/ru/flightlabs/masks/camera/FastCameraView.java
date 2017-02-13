@@ -74,6 +74,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
 
     private void startCameraPreview(int w, int h) {
         Log.d(TAG, "startCameraPreview " + w + " " + h);
+        releaseCamera(); // easiest way TODO fix to right way
         mCamera = Camera.open(cameraIndex);
         // If your preview can change or rotate, take care of those events here.
         // Make sure to stop the preview before resizing or reformatting it.
@@ -200,6 +201,10 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
         if (cameraInfo.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT) {
             cameraFacing = true;
         }
+        startCameraPreview(previewWidth, previewHeight);
+    }
+
+    public void enableView() {
         startCameraPreview(previewWidth, previewHeight);
     }
 }
