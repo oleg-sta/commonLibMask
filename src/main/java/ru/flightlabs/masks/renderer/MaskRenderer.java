@@ -39,6 +39,10 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
     int iGlobTime = 0;
     Activity context;
+
+    public static boolean facing;
+    public static int cameraWidth;
+    public static int cameraHeight;
     public static byte[] bufferFromCamera;
 
     int programNv21ToRgba;
@@ -110,14 +114,27 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         if (iGlobTime % 100 == 0) {
             iGlobTime = 0;
         }
+        // TODO synchronize size
         int mCameraWidth = CameraHelper.mCameraWidth;
         int mCameraHeight = CameraHelper.mCameraHeight;
 
         if (bufferFromCamera != null && Static.libsLoaded) {
-            if (!staticView) {
-                poseResult = null;
+            if (!staticView || true) {
+                boolean facing1 = false;
                 synchronized (FastCameraView.class) {
+                    facing1 = facing;
+                    mCameraWidth = cameraWidth;
+                    mCameraHeight = cameraHeight;
+                    if (bufferFromCamera == null) return;
                     if (greyTemp == null) {
+                        greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
+                        grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
+                        mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
+                    } else if (greyTemp.rows() != mCameraHeight || greyTemp.cols() != mCameraWidth) {
+                        Log.i(TAG, "onDrawFrame change size");
+                        greyTemp.release();
+                        grey.release();
+                        mRgbaDummy.release();
                         greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
                         grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
                         mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
@@ -152,15 +169,17 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 // if back camera
                 //Mat grey = greyTemp.t();
                 Core.transpose(greyTemp, grey);
-                if (!FastCameraView.cameraFacing) {
+                if (!facing1) {
                     Core.flip(grey, grey, 1);
                 } else {
                     Core.flip(grey, grey, -1);
                 }
 
-                int mAbsoluteFaceSize = Math.round((int) (mCameraWidth * 0.33));
-                boolean shapeBlends = shaderHelper.needBlend();
-                poseResult = poseHelper.findShapeAndPose(grey, mAbsoluteFaceSize, mRgbaDummy, widthSurf, heightSurf, shapeBlends, shaderHelper.model, context, mCameraHeight, mCameraWidth);
+                if (!staticView) {
+                    int mAbsoluteFaceSize = Math.round((int) (mCameraWidth * 0.33));
+                    boolean shapeBlends = shaderHelper.needBlend();
+                    poseResult = poseHelper.findShapeAndPose(grey, mAbsoluteFaceSize, mRgbaDummy, widthSurf, heightSurf, shapeBlends, shaderHelper.model, context, mCameraHeight, mCameraWidth);
+                }
 
                 // convert from NV21 to RGBA
                 GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[0]);
@@ -171,7 +190,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 GLES20.glEnableVertexAttribArray(vPos);
                 GLES20.glEnableVertexAttribArray(vTex);
                 int ufacing = GLES20.glGetUniformLocation(programNv21ToRgba, "u_facing");
-                GLES20.glUniform1i(ufacing, FastCameraView.cameraFacing ? 1 : 0);
+                GLES20.glUniform1i(ufacing, facing1 ? 1 : 0);
                 GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraWidth"), mCameraWidth);
                 GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraHeight"), mCameraWidth);
                 Log.i(TAG, "onDrawFrame5");

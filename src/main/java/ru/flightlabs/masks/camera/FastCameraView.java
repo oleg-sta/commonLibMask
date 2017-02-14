@@ -23,7 +23,7 @@ import ru.flightlabs.masks.renderer.MaskRenderer;
 public class FastCameraView extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback {
 
     private static final int MAGIC_TEXTURE_ID = 10;
-    public static boolean cameraFacing;
+    static boolean cameraFacing;
     private byte mBuffer[];
     private static final String TAG = "FastView";
     private Camera mCamera;
@@ -161,11 +161,13 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         Log.d(TAG, "Got a camera frame " + data.length);
-        // TODO copy data to another bufferFromCamera
-        if (MaskRenderer.bufferFromCamera == null) {
-            MaskRenderer.bufferFromCamera = new byte[data.length];
-        }
         synchronized (FastCameraView.class) {
+            MaskRenderer.cameraWidth = CameraHelper.mCameraWidth;
+            MaskRenderer.cameraHeight = CameraHelper.mCameraHeight;
+            MaskRenderer.facing = cameraFacing;
+            if (MaskRenderer.bufferFromCamera == null || MaskRenderer.bufferFromCamera.length != data.length) {
+                MaskRenderer.bufferFromCamera = new byte[data.length];
+            }
             // TODO find face and features here or another thread for optimization
             // TODO we can not copy buffer just find face features, morph face and let it go to renderer
             System.arraycopy(data, 0, MaskRenderer.bufferFromCamera, 0, data.length);
@@ -179,7 +181,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     }
 
     private void releaseCamera() {
-        synchronized (this) {
+        synchronized (FastCameraView.class) {
             if (mCamera != null) {
                 mCamera.stopPreview();
                 mCamera.setPreviewCallback(null);
