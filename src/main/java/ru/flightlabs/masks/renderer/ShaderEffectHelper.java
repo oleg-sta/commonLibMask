@@ -68,7 +68,7 @@ public class ShaderEffectHelper {
         shaderEffect2dWholeScreen(center, center2, texIn, programId, poss, texx, null);
     }
 
-    public static void effect2dTriangles(int programId, int textureForeground, int textureEffect, float[] verticesOnForeground, float[] verticesOnTexture, int posForeground, int posOnTexture, short[] triangles, Integer texture2, Integer texture3, boolean useHsv, float[] color0, float[] color1, float[] color2, float alpha0, float alpha1, float alpha2) {
+    public static void effect2dTriangles(int programId, int textureForeground, int textureEffect, float[] verticesOnForeground, float[] verticesOnTexture, int posForeground, int posOnTexture, short[] triangles, Integer texture2, Integer texture3, int[] useHsv, float[] color0, float[] color1, float[] color2, float alpha0, float alpha1, float alpha2) {
         GLES20.glUseProgram(programId);
 
 
@@ -76,7 +76,7 @@ public class ShaderEffectHelper {
         GLES20.glUniform3f(fAlpha, alpha0, alpha1, alpha2);
 
         int fAlpha2 = GLES20.glGetUniformLocation(programId, "useHsv");
-        GLES20.glUniform1i(fAlpha2, useHsv? 1 : 0);
+        GLES20.glUniform3f(fAlpha2, useHsv[0], useHsv[1], useHsv[2]);
 
         if (color0 != null) {
             int uColorLocation = GLES20.glGetUniformLocation(programId, "color0");

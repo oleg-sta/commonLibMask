@@ -185,6 +185,10 @@ public class PointsConverter {
     }
 
     public static float[] convertTovec3(int i) {
+        if (i < 0) {
+            // workaround
+            i = i + 256*256*256;
+        }
         float[] res = new float[3];
         res[2] = (i % 256) / 256f;
         res[1] = ((i / 256 ) % 256) / 256f;

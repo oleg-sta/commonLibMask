@@ -119,6 +119,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         int mCameraHeight = CameraHelper.mCameraHeight;
 
         if (bufferFromCamera != null && Static.libsLoaded) {
+            // повторно вытаскивая карды из буфера мы решаем проблему двойной буферизации, т.к. если тащить кадр из буфера, то их будет два
             if (!staticView || true) {
                 boolean facing1 = false;
                 synchronized (FastCameraView.class) {
