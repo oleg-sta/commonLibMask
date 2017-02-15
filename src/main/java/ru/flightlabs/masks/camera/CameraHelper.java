@@ -11,13 +11,9 @@ import java.util.List;
 
 public class CameraHelper {
 
-    // do not hold this info here
-    public static int mCameraWidth;
-    public static int mCameraHeight;
-
-
     private static final String LOGTAG = "CameraHelper";
 
+    // FIXME camera aspect ratio is very wrong, e.g. 320x240 didn't really 320x240 on screen, it sized by height!!!
     // find the preview size that best suits with aspect ratio and lower max size
     // TODO should consider size and ratio simultaneously, e.g. min( abs(aspect - (float)w/h) + abs(w-maxWidth)/maxWidth + abs(h-maxHeight)/maxHeight)
     public static void calculateCameraPreviewSize(Camera.Parameters param, int maxWidth, int maxHeight) {
@@ -44,10 +40,8 @@ public class CameraHelper {
             } else {
                 Log.i(LOGTAG, "Selected best size: "+bestWidth+" x "+bestHeight);
             }
-            mCameraWidth  = bestWidth;
-            mCameraHeight = bestHeight;
             param.setPreviewSize(bestWidth, bestHeight);
         }
-        Log.i(LOGTAG, "calculateCameraPreviewSize: "+mCameraWidth+"x"+mCameraHeight);
+        Log.i(LOGTAG, "calculateCameraPreviewSize: "+bestWidth+"x"+bestHeight);
     }
 }

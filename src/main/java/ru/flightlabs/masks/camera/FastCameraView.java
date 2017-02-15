@@ -35,6 +35,9 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     int previewWidth;
     int previewHeight;
 
+    int cameraWidth;
+    int cameraHeight;
+
     public FastCameraView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -72,8 +75,8 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
         startCameraPreview(w , h);
     }
 
-    private void startCameraPreview(int w, int h) {
-        Log.d(TAG, "startCameraPreview " + w + " " + h);
+    private void startCameraPreview(int previewWidthLocal, int previewHeightLocal) {
+        Log.d(TAG, "startCameraPreview " + previewWidthLocal + " " + previewHeightLocal + " " + cameraIndex);
         releaseCamera(); // easiest way TODO fix to right way
         mCamera = Camera.open(cameraIndex);
         // If your preview can change or rotate, take care of those events here.
@@ -102,7 +105,10 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
         params.getPreviewFpsRange(s2);
         Log.d(TAG, "preview format " + Arrays.toString(s2));
         params.setPreviewFormat(ImageFormat.NV21);
-        CameraHelper.calculateCameraPreviewSize(params, h, w);
+        CameraHelper.calculateCameraPreviewSize(params, previewHeightLocal, previewWidthLocal);
+        cameraWidth = params.getPreviewSize().width;
+        cameraHeight = params.getPreviewSize().height;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH && !android.os.Build.MODEL.equals("GT-I9100"))
             params.setRecordingHint(true);
         List<String> FocusModes = params.getSupportedFocusModes();
@@ -121,7 +127,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
         //params.setPreviewFpsRange( 30000, 30000 );
         mCamera.setParameters(params);
 
-        int size = w * h;
+        int size = cameraWidth * cameraHeight;
         size  = size * ImageFormat.getBitsPerPixel(params.getPreviewFormat()) / 8;
         mBuffer = new byte[size];
         // set preview size and make any resize, rotate or
@@ -162,8 +168,8 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     public void onPreviewFrame(byte[] data, Camera camera) {
         Log.d(TAG, "Got a camera frame " + data.length);
         synchronized (FastCameraView.class) {
-            MaskRenderer.cameraWidth = CameraHelper.mCameraWidth;
-            MaskRenderer.cameraHeight = CameraHelper.mCameraHeight;
+            MaskRenderer.cameraWidth = cameraWidth;
+            MaskRenderer.cameraHeight = cameraHeight;
             MaskRenderer.facing = cameraFacing;
             if (MaskRenderer.bufferFromCamera == null || MaskRenderer.bufferFromCamera.length != data.length) {
                 MaskRenderer.bufferFromCamera = new byte[data.length];

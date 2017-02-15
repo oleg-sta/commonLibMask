@@ -115,8 +115,8 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             iGlobTime = 0;
         }
         // TODO synchronize size
-        int mCameraWidth = CameraHelper.mCameraWidth;
-        int mCameraHeight = CameraHelper.mCameraHeight;
+        int mCameraWidth;
+        int mCameraHeight;
 
         if (bufferFromCamera != null && Static.libsLoaded) {
             // повторно вытаскивая карды из буфера мы решаем проблему двойной буферизации, т.к. если тащить кадр из буфера, то их будет два
@@ -126,11 +126,15 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                     facing1 = facing;
                     mCameraWidth = cameraWidth;
                     mCameraHeight = cameraHeight;
+                    Log.i(TAG, "onDrawFrame size " + mCameraWidth + " " + mCameraHeight + " " + widthSurf + " " + heightSurf);
                     if (bufferFromCamera == null) return;
+                    int cameraSize = mCameraWidth * mCameraHeight;
                     if (greyTemp == null) {
                         greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
                         grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
                         mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
+                        bufferY = ByteBuffer.allocateDirect(cameraSize);
+                        bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
                     } else if (greyTemp.rows() != mCameraHeight || greyTemp.cols() != mCameraWidth) {
                         Log.i(TAG, "onDrawFrame change size");
                         greyTemp.release();
@@ -139,14 +143,10 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                         greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
                         grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
                         mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
-                    }
-                    greyTemp.put(0, 0, bufferFromCamera);
-
-                    int cameraSize = mCameraWidth * mCameraHeight;
-                    if (bufferY == null) {
                         bufferY = ByteBuffer.allocateDirect(cameraSize);
                         bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
                     }
+                    greyTemp.put(0, 0, bufferFromCamera);
                     bufferY.put(bufferFromCamera, 0, cameraSize);
                     bufferY.position(0);
                     bufferUV.put(bufferFromCamera, cameraSize, cameraSize / 2);
@@ -192,8 +192,11 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 GLES20.glEnableVertexAttribArray(vTex);
                 int ufacing = GLES20.glGetUniformLocation(programNv21ToRgba, "u_facing");
                 GLES20.glUniform1i(ufacing, facing1 ? 1 : 0);
+                Log.i(TAG, "onDrawFrame size22 " + 1f * widthSurf/heightSurf + " " + 1f * mCameraHeight/mCameraWidth);
                 GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraWidth"), mCameraWidth);
-                GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraHeight"), mCameraWidth);
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraHeight"), mCameraHeight);
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "previewWidth"), widthSurf);
+                GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "previewHeight"), heightSurf);
                 Log.i(TAG, "onDrawFrame5");
                 ShaderEffectHelper.shaderEffect2dWholeScreen(new Point(0, 0), new Point(widthSurf, heightSurf), texNV21FromCamera[0], programNv21ToRgba, vPos, vTex, texNV21FromCamera[1]);
                 Log.i(TAG, "onDrawFrame6");

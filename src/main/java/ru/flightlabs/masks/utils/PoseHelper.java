@@ -191,9 +191,10 @@ public class PoseHelper {
 
     // FIXME use only one size factor, from center of image
     private void convertToSurface(Point[] points, int surfWidth, int surfHeight, int cameraWidth, int cameraHeight) {
+        float factor = Math.max(1f * surfWidth / cameraWidth, 1f * surfHeight / cameraHeight);
         for (Point p : points) {
-            p.x = p.x * surfWidth / cameraWidth;
-            p.y = p.y * surfHeight / cameraHeight;
+            p.x = 0.5 * surfWidth - (0.5 * cameraWidth - p.x) * factor;
+            p.y = 0.5 * surfHeight - (0.5 * cameraHeight - p.y ) * factor;
         }
     }
 
