@@ -10,9 +10,8 @@ import ru.flightlabs.masks.utils.PoseHelper;
 import ru.flightlabs.masks.utils.ShaderUtils;
 
 /**
- * Created by sov on 06.02.2017.
+ * Shader effects for concrete application
  */
-
 public abstract class ShaderEffect {
 
     protected Context context;
@@ -36,7 +35,6 @@ public abstract class ShaderEffect {
     }
 
     public boolean needBlend() {
-        //return effectsMap.get(Static.newIndexEye).needBlendShape;
         return false;
     }
 

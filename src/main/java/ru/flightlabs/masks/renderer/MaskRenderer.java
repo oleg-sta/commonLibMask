@@ -22,6 +22,7 @@ import ru.flightlabs.masks.CompModel;
 import ru.flightlabs.masks.Static;
 import ru.flightlabs.masks.camera.CameraHelper;
 import ru.flightlabs.masks.camera.FastCameraView;
+import ru.flightlabs.masks.camera.FrameCamera;
 import ru.flightlabs.masks.utils.FileUtils;
 import ru.flightlabs.masks.utils.PhotoMaker;
 import ru.flightlabs.masks.utils.PointsConverter;
@@ -39,11 +40,6 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
     int iGlobTime = 0;
     Activity context;
-
-    public static boolean facing;
-    public static int cameraWidth;
-    public static int cameraHeight;
-    public static byte[] bufferFromCamera;
 
     int programNv21ToRgba;
     int texNV21FromCamera[] = new int[2];
@@ -67,6 +63,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     PoseHelper.PoseResult poseResult;
 
     private static final String TAG = "MaskRenderer";
+    public FrameCamera frameCamera;
 
     public MaskRenderer(Activity context, CompModel compModel, ShaderEffect shaderHelper) {
         this.context = context;
@@ -118,16 +115,16 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         int mCameraWidth;
         int mCameraHeight;
 
-        if (bufferFromCamera != null && Static.libsLoaded) {
+        if (frameCamera != null && Static.libsLoaded) {
             // повторно вытаскивая карды из буфера мы решаем проблему двойной буферизации, т.к. если тащить кадр из буфера, то их будет два
             if (!staticView || true) {
                 boolean facing1 = false;
-                synchronized (FastCameraView.class) {
-                    facing1 = facing;
-                    mCameraWidth = cameraWidth;
-                    mCameraHeight = cameraHeight;
+                synchronized (frameCamera) {
+                    facing1 = frameCamera.facing;
+                    mCameraWidth = frameCamera.cameraWidth;
+                    mCameraHeight = frameCamera.cameraHeight;
                     Log.i(TAG, "onDrawFrame size " + mCameraWidth + " " + mCameraHeight + " " + widthSurf + " " + heightSurf);
-                    if (bufferFromCamera == null) return;
+                    if (frameCamera.bufferFromCamera == null) return;
                     int cameraSize = mCameraWidth * mCameraHeight;
                     if (greyTemp == null) {
                         greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
@@ -146,25 +143,19 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                         bufferY = ByteBuffer.allocateDirect(cameraSize);
                         bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
                     }
-                    greyTemp.put(0, 0, bufferFromCamera);
-                    bufferY.put(bufferFromCamera, 0, cameraSize);
+                    greyTemp.put(0, 0, frameCamera.bufferFromCamera);
+                    bufferY.put(frameCamera.bufferFromCamera, 0, cameraSize);
                     bufferY.position(0);
-                    bufferUV.put(bufferFromCamera, cameraSize, cameraSize / 2);
+                    bufferUV.put(frameCamera.bufferFromCamera, cameraSize, cameraSize / 2);
                     bufferUV.position(0);
-                    Log.i(TAG, "onDrawFrame2 " + bufferFromCamera[0]);
-                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
                     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[0]);
                     GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE, mCameraWidth, (int) (mCameraHeight), 0,
                             GLES20.GL_LUMINANCE, GLES20.GL_UNSIGNED_BYTE, bufferY);
                     GLES20.glFlush();
-                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
-                    //bufferY.position(heightSurf * widthSurf);
-                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
                     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[1]);
                     GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE_ALPHA, mCameraWidth / 2, (int) (mCameraHeight * 0.5), 0,
                             GLES20.GL_LUMINANCE_ALPHA, GLES20.GL_UNSIGNED_BYTE, bufferUV);
                     GLES20.glFlush();
-                    Log.i(TAG, "onDrawFrame2 " + bufferY.limit());
                     Log.i(TAG, "onDrawFrame3");
                 }
                 // if back camera

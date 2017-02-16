@@ -22,8 +22,9 @@ import ru.flightlabs.masks.renderer.MaskRenderer;
 
 public class FastCameraView extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback {
 
+    public FrameCamera frameCamera = new FrameCamera();
     private static final int MAGIC_TEXTURE_ID = 10;
-    static boolean cameraFacing;
+    boolean cameraFacing;
     private byte mBuffer[];
     private static final String TAG = "FastView";
     private Camera mCamera;
@@ -124,7 +125,6 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
         params.setPreviewFpsRange(minFps, maxFps);
         Log.d(TAG, "preview fps: " + minFps + ", " + maxFps);
 
-        //params.setPreviewFpsRange( 30000, 30000 );
         mCamera.setParameters(params);
 
         int size = cameraWidth * cameraHeight;
@@ -149,13 +149,11 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
                 mCamera.setPreviewDisplay(null);
 
             mCamera.startPreview();
-            //mCamera.setPreviewCallback(this);
             Log.d(TAG, "Got a camera frame " + ImageFormat.getBitsPerPixel(params.getPreviewFormat()) + " " + params.getPreviewSize().height + " " + params.getPreviewSize().width);
 
         } catch (Exception e){
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }
-
     }
 
     @Override
@@ -167,16 +165,16 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         Log.d(TAG, "Got a camera frame " + data.length);
-        synchronized (FastCameraView.class) {
-            MaskRenderer.cameraWidth = cameraWidth;
-            MaskRenderer.cameraHeight = cameraHeight;
-            MaskRenderer.facing = cameraFacing;
-            if (MaskRenderer.bufferFromCamera == null || MaskRenderer.bufferFromCamera.length != data.length) {
-                MaskRenderer.bufferFromCamera = new byte[data.length];
+        synchronized (frameCamera) {
+            frameCamera.cameraWidth = cameraWidth;
+            frameCamera.cameraHeight = cameraHeight;
+            frameCamera.facing = cameraFacing;
+            if (frameCamera.bufferFromCamera == null || frameCamera.bufferFromCamera.length != data.length) {
+                frameCamera.bufferFromCamera = new byte[data.length];
             }
             // TODO find face and features here or another thread for optimization
             // TODO we can not copy buffer just find face features, morph face and let it go to renderer
-            System.arraycopy(data, 0, MaskRenderer.bufferFromCamera, 0, data.length);
+            System.arraycopy(data, 0, frameCamera.bufferFromCamera, 0, data.length);
         }
         // we should add buffer to queue, dut to buffer
         mCamera.addCallbackBuffer(mBuffer);
@@ -187,7 +185,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     }
 
     private void releaseCamera() {
-        synchronized (FastCameraView.class) {
+        synchronized (frameCamera) {
             if (mCamera != null) {
                 mCamera.stopPreview();
                 mCamera.setPreviewCallback(null);

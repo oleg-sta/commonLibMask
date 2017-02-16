@@ -43,5 +43,8 @@ public class CameraHelper {
             param.setPreviewSize(bestWidth, bestHeight);
         }
         Log.i(LOGTAG, "calculateCameraPreviewSize: "+bestWidth+"x"+bestHeight);
+        for (Camera.Size size : param.getSupportedPictureSizes()) {
+            Log.i(LOGTAG, "calculateCameraPreviewSize pic size: "+size.width+" x "+size.height);
+        }
     }
 }

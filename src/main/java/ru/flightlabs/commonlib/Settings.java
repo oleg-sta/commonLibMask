@@ -15,7 +15,6 @@ public class Settings {
     public static final String MODEL_PATH = "modelPath";
     public static final String MODEL_PATH_DEFAULT = "/storage/extSdCard/sp_s2.dat";
     public static boolean useLinear;
-    public static boolean makeUp;
     public static boolean useKalman;
 
     public static Class clazz;
