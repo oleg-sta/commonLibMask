@@ -32,10 +32,10 @@ public class ModelLoaderTask extends AsyncTask<CompModel, Void, Void> {
 
     CompModel compModel;
     private static final String TAG = "LoadModel_class";
-    ProgressBar pb;
+    Callback callback;
 
-    public ModelLoaderTask(ProgressBar pb) {
-        this.pb = pb;
+    public ModelLoaderTask(Callback callback) {
+        this.callback = callback;
     }
     @Override
     protected Void doInBackground(CompModel... params) {
@@ -134,16 +134,14 @@ public class ModelLoaderTask extends AsyncTask<CompModel, Void, Void> {
         return null;
     }
 
-    protected void onPreExecute() {
-        pb.setVisibility(View.VISIBLE);
-    }
     @Override
     protected void onPostExecute(Void result) {
         super.onPostExecute(result);
-        pb.setVisibility(View.INVISIBLE);
+        callback.onModelLoaded();
     }
 
 
-
-
+    public interface Callback {
+        void onModelLoaded();
+    }
 }
