@@ -98,13 +98,6 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
         // we transpose view
         Camera.Parameters params = mCamera.getParameters();
         Log.d(TAG, "preview format " + params.getPreviewFormat());
-        List<int[]> s = params.getSupportedPreviewFpsRange();
-        for (int[] sd : s) {
-            Log.d(TAG, "preview format " + Arrays.toString(sd));
-        }
-        int[] s2 = new int[2];
-        params.getPreviewFpsRange(s2);
-        Log.d(TAG, "preview format " + Arrays.toString(s2));
         params.setPreviewFormat(ImageFormat.NV21);
         CameraHelper.calculateCameraPreviewSize(params, previewHeightLocal, previewWidthLocal);
         cameraWidth = params.getPreviewSize().width;
@@ -117,13 +110,6 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
         {
             params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
         }
-
-        List<int[]> frameRates = params.getSupportedPreviewFpsRange();
-        int last = frameRates.size() - 1;
-        int minFps = (frameRates.get(last))[Camera.Parameters.PREVIEW_FPS_MIN_INDEX];
-        int maxFps = (frameRates.get(last))[Camera.Parameters.PREVIEW_FPS_MAX_INDEX];
-        params.setPreviewFpsRange(minFps, maxFps);
-        Log.d(TAG, "preview fps: " + minFps + ", " + maxFps);
 
         mCamera.setParameters(params);
 
