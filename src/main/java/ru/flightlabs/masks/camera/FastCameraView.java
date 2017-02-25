@@ -161,6 +161,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
             // TODO find face and features here or another thread for optimization
             // TODO we can not copy buffer just find face features, morph face and let it go to renderer
             System.arraycopy(data, 0, frameCamera.bufferFromCamera, 0, data.length);
+            frameCamera.wereProcessed = false;
         }
         // we should add buffer to queue, dut to buffer
         mCamera.addCallbackBuffer(mBuffer);

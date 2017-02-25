@@ -9,4 +9,5 @@ public class FrameCamera {
     public int cameraHeight;
     public byte[] bufferFromCamera;
     public boolean facing;
+    public boolean wereProcessed;
 }
