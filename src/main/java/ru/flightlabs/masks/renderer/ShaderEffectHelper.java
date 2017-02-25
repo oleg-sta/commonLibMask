@@ -68,9 +68,8 @@ public class ShaderEffectHelper {
         shaderEffect2dWholeScreen(center, center2, texIn, programId, poss, texx, null);
     }
 
-    public static void effect2dTriangles(int programId, int textureForeground, int textureEffect, float[] verticesOnForeground, float[] verticesOnTexture, int posForeground, int posOnTexture, short[] triangles, Integer texture2, Integer texture3, int[] useHsv, float[] color0, float[] color1, float[] color2, float alpha0, float alpha1, float alpha2) {
+    public static void effect2dTriangles(int programId, int textureForeground, int textureEffect[], float[] verticesOnForeground, float[] verticesOnTexture, int posForeground, int posOnTexture, short[] triangles, Integer texture2, Integer texture3, int[] useHsv, float[] color0, float[] color1, float[] color2, float alpha0, float alpha1, float alpha2, float[] addColors) {
         GLES20.glUseProgram(programId);
-
 
         int fAlpha = GLES20.glGetUniformLocation(programId, "f_alpha");
         GLES20.glUniform3f(fAlpha, alpha0, alpha1, alpha2);
@@ -98,20 +97,38 @@ public class ShaderEffectHelper {
         GLES20.glVertexAttribPointer(posOnTexture,  2, GLES20.GL_FLOAT, false, 0, mTextureBuffer);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureEffect);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureEffect[0]);
         GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture"), 0);
 
         if (texture2 != null) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE2);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture2);
-            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture2"), 2);
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture1"), 2);
         }
 
         if (texture3 != null) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture3);
-            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture3"), 3);
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture2"), 3);
         }
+
+        int[] useHsv1 = new int[]{-1, -1, -1};
+        if (textureEffect[1] > 0) {
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE4);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureEffect[0]);
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture3"), 4);
+            useHsv1[0] = useHsv[0];
+            GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "color3"), addColors[0], addColors[1], addColors[2]); // FIX to another color
+        }
+        if (textureEffect[2] > 0) {
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE5);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureEffect[2]);
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture4"), 5);
+            useHsv1[1] = useHsv[0];
+            GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "color4"), addColors[3], addColors[4], addColors[5]); // FIX to another color
+        }
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "useHsv1"), useHsv1[0], useHsv1[1], useHsv1[2]);
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_alpha1"), alpha0, alpha0, alpha0);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureForeground);
