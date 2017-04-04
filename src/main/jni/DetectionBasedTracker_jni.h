@@ -10,6 +10,8 @@
 #include "ObjectiveFunction.h"
 #include "TestObjectiveFunction.h"
 #include "OrthogonalProjectionModel.h"
+
+#include "FaceFollower.h"
 /* Header for class org_opencv_samples_fd_DetectionBasedTracker */
 
 #ifndef _Included_org_opencv_samples_fd_DetectionBasedTracker
@@ -79,6 +81,12 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_nativeDraw
 
 JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit
 (JNIEnv * jenv, jclass, jstring path);
+
+JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFaceInit
+        (JNIEnv * jenv, jclass, jstring path, jstring path2);
+// find face with tracking by landmarks
+JNIEXPORT jint JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace
+        (JNIEnv * jenv, jclass, jlong jGreyImg, jlong jmatrixFacePrev, jlong jmatrix2dLands, jint flag, jlong);
 
 // morph face by blendshapes
 JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace

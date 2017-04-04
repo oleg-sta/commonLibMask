@@ -93,6 +93,11 @@ public class PointsConverter {
 
     public static Point[] matTo2dPoints(Mat dst) {
         Point[] res = new Point[dst.rows()];
+        matTo2dPoints(dst, res);
+        return res;
+    }
+
+    public static void matTo2dPoints(Mat dst, Point[] res) {
         double[] buffShape = new double[dst.cols() * dst.rows()];
         dst.get(0, 0, buffShape);
         int rows = dst.rows();
@@ -100,7 +105,6 @@ public class PointsConverter {
         for (int i = 0; i < rows; i++) {
             res[i] = new Point((float) buffShape[i * cols], (float) buffShape[i * cols + 1]);
         }
-        return res;
     }
 
     public static void matToFloatArray(Mat output3dShape, float[] tempV) {
@@ -193,6 +197,14 @@ public class PointsConverter {
         res[2] = (i % 256) / 256f;
         res[1] = ((i / 256 ) % 256) / 256f;
         res[0] = (i / 256 / 256) / 256f;
+        return res;
+    }
+
+    public static Point[] newPointZero(int size) {
+        Point[] res = new Point[size];
+        for (int i = 0; i < size; i++) {
+            res[i] = new Point(0, 0);
+        }
         return res;
     }
 }

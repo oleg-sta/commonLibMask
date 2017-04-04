@@ -25,6 +25,8 @@ public class DetectionBasedTracker
         } else {
             Log.e("DetectionBasedTracker", "findLandMarks file doesn't exists !" + modelSp);
         }
+        mNativeFaceFollower = trackFaceInit(modelSp, cascadeName);
+
         Log.e("DetectionBasedTracker", "findLandMarks mNativeModel " + mNativeModel);
     }
 
@@ -74,6 +76,16 @@ public class DetectionBasedTracker
         morhpFace(input2dShape.getNativeObjAddr(), output3dShape.getNativeObjAddr(), jmatrixinitial.getNativeObjAddr(), mNative3d, flag? 1 : 0, useLinear? 1 : 0);
     }
 
+    @Deprecated
+    public void trackFaceInit2(String modelFeatures, String modelHaar) {
+        mNativeFaceFollower = trackFaceInit(modelFeatures, modelHaar);
+    }
+
+    public boolean trackFace(Mat imgGrey, Mat prevFace, Mat lands, boolean prevFaceFound) {
+        return trackFace(imgGrey.getNativeObjAddr(), prevFace.getNativeObjAddr(), lands.getNativeObjAddr(), prevFaceFound ? 1 : 0, mNativeFaceFollower) == 1? true : false;
+    }
+
+    private long mNativeFaceFollower = 0;
     private long mNativeObj = 0;
     private Long mNativeModel = null;
     private long mNative3d = 0;
@@ -92,5 +104,8 @@ public class DetectionBasedTracker
 
     private static native void morhpFace(long jmatrix2dLands, long jmatrix3dFace, long jmatrixinitial, long modelpath, int flag, int useLinear);
     private static native long morhpFaceInit(String modelpath);
+
+    private static native long trackFaceInit(String str, String str2);
+    private static native int trackFace(long jGreyImg, long jmatrixFacePrev, long jmatrix2dLands, int flag, long model);
     
 }

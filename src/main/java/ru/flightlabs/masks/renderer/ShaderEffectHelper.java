@@ -112,7 +112,7 @@ public class ShaderEffectHelper {
             GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture2"), 3);
         }
 
-        int[] useHsv1 = new int[]{-1, -1, -1};
+        int[] useHsv1 = new int[]{-1, -1, -1, -1, -1};
         if (textureEffect[1] > 0) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE4);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureEffect[0]);
@@ -127,8 +127,25 @@ public class ShaderEffectHelper {
             useHsv1[1] = useHsv[0];
             GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "color4"), addColors[3], addColors[4], addColors[5]); // FIX to another color
         }
+        if (textureEffect[3] > 0) {
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE6);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureEffect[2]);
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture5"), 6);
+            useHsv1[2] = useHsv[0];
+            GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "color5"), addColors[6], addColors[7], addColors[8]); // FIX to another color
+        }
+        if (textureEffect[4] > 0) {
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE7);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureEffect[2]);
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture6"), 7);
+            useHsv1[3] = useHsv[0];
+            GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "color6"), addColors[9], addColors[10], addColors[11]); // FIX to another color
+        }
         GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "useHsv1"), useHsv1[0], useHsv1[1], useHsv1[2]);
         GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_alpha1"), alpha0, alpha0, alpha0);
+
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "useHsv2"), useHsv1[3], useHsv1[3], useHsv1[3]);
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_alpha2"), alpha0, alpha0, alpha0);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureForeground);

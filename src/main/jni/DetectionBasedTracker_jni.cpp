@@ -513,6 +513,62 @@ JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
     return (jlong)model3d;
 }
 
+JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFaceInit
+        (JNIEnv * jenv, jclass, jstring path, jstring path2)
+{
+    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit enter");
+    const char* jnamestr = jenv->GetStringUTFChars(path, NULL);
+    std::string str(jnamestr);
+    const char* jnamestr2 = jenv->GetStringUTFChars(path2, NULL);
+    std::string str2(jnamestr2);
+    FaceFollower* model3d = new FaceFollower(str, str2);
+    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit exit");
+    return (jlong)model3d;
+}
+
+JNIEXPORT jint JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace
+        (JNIEnv * jenv, jclass, jlong jGreyImg, jlong jmatrixFacePrev, jlong jmatrix2dLands, jint flag, jlong jFaceFollower)
+{
+    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace enter");
+    float shapeCurrent[2][68];
+    cv::Point2f faceRectangle[4];
+    bool prevFaceFound = (flag == 1 ? true : false);
+    cv::Mat matrix2dLands = *((Mat*)jmatrix2dLands);
+    for (int i = 0; i < matrix2dLands.rows; i++) {
+        shapeCurrent[0][i] = matrix2dLands.at<double>(i, 0);
+        shapeCurrent[1][i] = matrix2dLands.at<double>(i, 1);
+    }
+    cv::Mat matrixFacePrev = *((Mat*)jmatrixFacePrev);
+    for (int i = 0; i < matrixFacePrev.rows; i++) {
+        faceRectangle[i].x = matrixFacePrev.at<double>(i, 0);
+        faceRectangle[i].y = matrixFacePrev.at<double>(i, 1);
+    }
+    cv::Mat greyImg = *((Mat*)jGreyImg);
+    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace22");
+    FaceFollower* ff = ((FaceFollower*)jFaceFollower);
+    if (prevFaceFound)
+    {
+        LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace1");
+        prevFaceFound = ff->findNewLocation(greyImg, faceRectangle, faceRectangle, shapeCurrent);
+    }
+    else
+    {
+        LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace2");
+        prevFaceFound = ff->findNewLocation(greyImg, faceRectangle, shapeCurrent);
+    }
+    // output
+    for (int i = 0; i < matrix2dLands.rows; i++) {
+        matrix2dLands.at<double>(i, 0) = shapeCurrent[0][i];
+        matrix2dLands.at<double>(i, 1) = shapeCurrent[1][i];
+    }
+    for (int i = 0; i < matrixFacePrev.rows; i++) {
+        matrixFacePrev.at<double>(i, 0) = faceRectangle[i].x;
+        matrixFacePrev.at<double>(i, 1) = faceRectangle[i].y;
+    }
+    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace exit");
+    return prevFaceFound ? 1 : 0;
+}
+
 JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
 (JNIEnv * jenv, jclass, jlong jmatrix2dLands, jlong jmatrix3dFace, jlong jinitialParams, jlong model3dL, jint flag, jint juseLinear)
 {
