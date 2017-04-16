@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -17,6 +18,7 @@ import java.nio.ByteOrder;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ru.flightlabs.commonlib.R;
 import ru.flightlabs.commonlib.Settings;
 import ru.flightlabs.masks.CompModel;
 import ru.flightlabs.masks.Static;
@@ -220,6 +222,8 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 context.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        Toast toast = Toast.makeText(context, R.string.photo_saved, Toast.LENGTH_SHORT);
+                        toast.show();
                         Intent intent =  new Intent(context, Settings.clazz);
                         intent.putExtra(Settings.PHOTO, fileName);
                         context.startActivity(intent);
