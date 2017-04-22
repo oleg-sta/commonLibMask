@@ -59,7 +59,6 @@ public class PoseHelper {
     boolean prevFaceFound = false;
     Point[] prevFace;
 
-
     public PoseHelper(CompModel compModel) {
         this.compModel = compModel;
     }
@@ -67,8 +66,9 @@ public class PoseHelper {
     public void init(Context context, int width, int height) {
         Log.i(TAG, "init");
         intrinsics = Mat.eye(3, 3, CvType.CV_64F);
-        intrinsics.put(0, 0, width); // ?
-        intrinsics.put(1, 1, width); // ?
+        int wiid = width < height? width : height;
+        intrinsics.put(0, 0, wiid); // ?
+        intrinsics.put(1, 1, wiid); // ?
         intrinsics.put(0, 2, width / 2);
         intrinsics.put(1, 2, height / 2);
         intrinsics.put(2, 2, 1);
@@ -76,6 +76,7 @@ public class PoseHelper {
         rvec = new Mat(3, 1, CvType.CV_64F);
         tvec = new Mat(3, 1, CvType.CV_64F);
         // TODO calculate values somehow
+        // initial values
         tvec.put(0, 0, 0);
         tvec.put(1, 0, 0);
         tvec.put(2, 0, 2);
@@ -153,9 +154,10 @@ public class PoseHelper {
 
                 if (Settings.useKalman && previous != null) {
                     // TODO if changes are greater then parameter, we should not use calman
+                    final double kalman = 0.4;
                     for (int i = 0; i < previous.length; i++) {
-                        foundLandmarks[i].x = 0.4 * foundLandmarks[i].x + 0.6 * previous[i].x;
-                        foundLandmarks[i].y = 0.4 * foundLandmarks[i].y + 0.6 * previous[i].y;
+                        foundLandmarks[i].x = kalman * foundLandmarks[i].x + (1.0 - kalman) * previous[i].x;
+                        foundLandmarks[i].y = kalman * foundLandmarks[i].y + (1.0 - kalman) * previous[i].y;
                     }
                 }
                 // FIXME temp
@@ -381,7 +383,9 @@ public class PoseHelper {
 
     public static float[] createProjectionMatrixThroughPerspective(int width, int height) {
         float[] mProjectionMatrix = new float[16];
-        Matrix.perspectiveM(mProjectionMatrix, 0, 83.26707f, (float)width / (float)height, 0.01f, 300.0f); // Specifies the field of view angle, in degrees, in the y direction. atan(0.5 * height/ width) * 2
+        float value = 83.26707f;
+        value = (float) Math.atan(0.5f * height / width) * 2 * 180 / 3.14159f;
+        Matrix.perspectiveM(mProjectionMatrix, 0, value, (float)width / (float)height, 0.01f, 300.0f); // Specifies the field of view angle, in degrees, in the y direction. atan(0.5 * height/ width) * 2
         return mProjectionMatrix;
     }
 
