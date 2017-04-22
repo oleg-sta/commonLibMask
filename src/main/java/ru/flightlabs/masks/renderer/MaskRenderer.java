@@ -11,9 +11,14 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -26,6 +31,7 @@ import ru.flightlabs.masks.camera.CameraHelper;
 import ru.flightlabs.masks.camera.FastCameraView;
 import ru.flightlabs.masks.camera.FrameCamera;
 import ru.flightlabs.masks.utils.FileUtils;
+import ru.flightlabs.masks.utils.OpencvUtils;
 import ru.flightlabs.masks.utils.PhotoMaker;
 import ru.flightlabs.masks.utils.PointsConverter;
 import ru.flightlabs.masks.utils.PoseHelper;
@@ -216,6 +222,9 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 m_bbPixels.rewind();
                 rgba.put(0, 0, m_bbPixels.array());
                 Core.flip(rgba, rgba, 0);
+
+                OpencvUtils.makeLogo(rgba, context);
+
                 final String fileName = PhotoMaker.makePhoto(rgba, context);
                 rgba.release();
                 // TODO change view
