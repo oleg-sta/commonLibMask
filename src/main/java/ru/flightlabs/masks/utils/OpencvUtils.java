@@ -1,6 +1,23 @@
 package ru.flightlabs.masks.utils;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
+import org.opencv.android.Utils;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import ru.flightlabs.commonlib.Settings;
 
 /**
  * Created by sov on 04.01.2017.
@@ -39,5 +56,29 @@ public class OpencvUtils {
 
     public static Point convertToGl(Point old, int width, int height) {
         return new Point(old.x / width, 1 - old.y / height);
+    }
+
+    public static Mat loadFromResource(Context context, int resourceId) {
+        // используем загрузку через андроид, т.к. opencv ломает цвета
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        Bitmap bmp = BitmapFactory.decodeStream(context.getResources().openRawResource(resourceId), null, opts);
+        Mat newEyeTmp2 = new Mat(bmp.getHeight(), bmp.getWidth(), CvType.CV_8UC4);
+        Utils.bitmapToMat(bmp, newEyeTmp2, true);
+        return newEyeTmp2;
+    }
+
+    public static void makeLogo(Mat rgba, Context context) {
+        if (Settings.resourceLogo == null) return;
+        Mat logotip = OpencvUtils.loadFromResource(context, Settings.resourceLogo);
+        int widthLogo = (int)(rgba.width() * 0.2f);
+        int heightLogo = logotip.height() * widthLogo / logotip.width();
+        Mat submat = rgba.submat(rgba.height() - heightLogo, rgba.height(), rgba.width() - widthLogo, rgba.width());
+        Imgproc.resize(logotip, logotip, new Size(widthLogo, heightLogo));
+        List<Mat> layers = new ArrayList<Mat>();
+        Core.split(logotip, layers);
+        logotip.copyTo(submat, layers.get(3));
+        logotip.release();
+        submat.release();
     }
 }
