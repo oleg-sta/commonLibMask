@@ -5,6 +5,7 @@ import android.opengl.Matrix;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Point3;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -54,13 +55,56 @@ public class ShaderEffectHelper {
         GLES20.glFlush();
     }
 
-    public static void effect2dParticle(int width, int height, int programId, int vPos, float[] verticesParticels) {
+    public static void effect2dParticle(int width, int height, int programId, int vPos, float[] verticesParticels, float[] color) {
         GLES20.glUseProgram(programId);
-
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_color"), color[0], color[1], color[2]);
         FloatBuffer vertexData = convertArray(verticesParticels);
         GLES20.glVertexAttribPointer(vPos, 2, GLES20.GL_FLOAT, false, 0, vertexData);
-
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, verticesParticels.length / 2);
+        GLES20.glFlush();
+    }
+
+    public static void effect2dLines(int width, int height, int programId, int vPos, float[] verticesParticels) {
+        GLES20.glUseProgram(programId);
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_color"), 1, 0, 0);
+        FloatBuffer vertexData = convertArray(verticesParticels);
+        GLES20.glVertexAttribPointer(vPos, 2, GLES20.GL_FLOAT, false, 0, vertexData);
+        GLES20.glDrawArrays(GLES20.GL_LINES, 0, verticesParticels.length / 2);
+        GLES20.glFlush();
+    }
+
+    public static void effect2dLinesFrom3dPoints(int width, int height, int programId, int vPos, float[] vertices3d, Mat glMatrix, float[] color) {
+        GLES20.glUseProgram(programId);
+
+        int matrixMvp = GLES20.glGetUniformLocation(programId, "u_MVPMatrix");
+        float[] matrixView = PoseHelper.convertToArray(glMatrix);
+        float[] mMatrix = new float[16];
+        Matrix.multiplyMM(mMatrix, 0, PoseHelper.createProjectionMatrixThroughPerspective(width, height), 0, matrixView, 0);
+        GLES20.glUniformMatrix4fv(matrixMvp, 1, false, mMatrix, 0);
+
+
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_color"), color[0], color[1], color[2]);
+        FloatBuffer vertexData = convertArray(vertices3d);
+        GLES20.glVertexAttribPointer(vPos, 3, GLES20.GL_FLOAT, false, 0, vertexData);
+        GLES20.glDrawArrays(GLES20.GL_LINES, 0, vertices3d.length / 3);
+        GLES20.glFlush();
+    }
+
+    public static void effect2dPointsFrom3dPoints(int width, int height, int programId, int vPos, float[] vertices3d, Mat glMatrix, float[] color) {
+        GLES20.glUseProgram(programId);
+
+        int matrixMvp = GLES20.glGetUniformLocation(programId, "u_MVPMatrix");
+        float[] matrixView = PoseHelper.convertToArray(glMatrix);
+        float[] mMatrix = new float[16];
+        Matrix.multiplyMM(mMatrix, 0, PoseHelper.createProjectionMatrixThroughPerspective(width, height), 0, matrixView, 0);
+        GLES20.glUniformMatrix4fv(matrixMvp, 1, false, mMatrix, 0);
+
+
+
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_color"), color[0], color[1], color[2]);
+        FloatBuffer vertexData = convertArray(vertices3d);
+        GLES20.glVertexAttribPointer(vPos, 3, GLES20.GL_FLOAT, false, 0, vertexData);
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, vertices3d.length / 3);
         GLES20.glFlush();
     }
 

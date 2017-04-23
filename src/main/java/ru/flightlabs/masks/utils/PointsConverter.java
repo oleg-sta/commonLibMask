@@ -6,15 +6,77 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Point3;
 import org.opencv.video.Video;
 
 import ru.flightlabs.masks.model.primitives.Triangle;
+import ru.flightlabs.masks.renderer.Model;
 
 /**
  * Created by sov on 08.02.2017.
  */
 
 public class PointsConverter {
+
+    public static float[] getOnlyByNumbder(float[] in, int[] p3d1) {
+        float[] res = new float[p3d1.length * 3];
+        for (int i = 0; i < p3d1.length; i++) {
+            res[i * 3] = in[p3d1[i] * 3];
+            res[i * 3 + 1] = in[p3d1[i] * 3 + 1];
+            res[i * 3 + 2] = in[p3d1[i] * 3 + 2];
+        }
+        return res;
+    }
+
+
+    public static float[] getPointsFromModel(Model model) {
+        Point3[] res = new Point3[model.tempV.length / 3];
+        float[] res2 = new float[model.tempV.length];
+        for (int i = 0; i < model.indices.length / 3; i++) {
+            short ind1 = model.indices[i * 3];
+            short ind2 = model.indices[i * 3 + 1];
+            short ind3 = model.indices[i * 3 + 2];
+            res[i * 6] = new Point3(model.tempV[ind1 * 3], model.tempV[ind1 * 3 + 1], model.tempV[ind1 * 3 + 2]);
+            res[i * 6 + 1] = new Point3(model.tempV[ind2 * 3], model.tempV[ind2 * 3 + 1], model.tempV[ind2 * 3 + 2]);
+
+            res[i * 6 + 2] = new Point3(model.tempV[ind2 * 3], model.tempV[ind2 * 3 + 1], model.tempV[ind2 * 3 + 2]);
+            res[i * 6 + 3] = new Point3(model.tempV[ind3 * 3], model.tempV[ind3 * 3 + 1], model.tempV[ind3 * 3 + 2]);
+
+            res[i * 6 + 4] = new Point3(model.tempV[ind3 * 3], model.tempV[ind3 * 3 + 1], model.tempV[ind3 * 3 + 2]);
+            res[i * 6 + 5] = new Point3(model.tempV[ind1 * 3], model.tempV[ind1 * 3 + 1], model.tempV[ind1 * 3 + 2]);
+        }
+        for (int i = 0; i < res.length; i++) {
+            res2[i * 3] = (float)res[i].x;
+            res2[i * 3 + 1] = (float)res[i].y;
+            res2[i * 3 + 2] = (float)res[i].z;
+        }
+        return res2;
+    }
+
+    public static float[] getLinesFromModel(Model model) {
+        Point3[] res = new Point3[model.indices.length * 2];
+        float[] res2 = new float[model.indices.length * 2 * 3];
+        for (int i = 0; i < model.indices.length / 3; i++) {
+            short ind1 = model.indices[i * 3];
+            short ind2 = model.indices[i * 3 + 1];
+            short ind3 = model.indices[i * 3 + 2];
+            res[i * 6] = new Point3(model.tempV[ind1 * 3], model.tempV[ind1 * 3 + 1], model.tempV[ind1 * 3 + 2]);
+            res[i * 6 + 1] = new Point3(model.tempV[ind2 * 3], model.tempV[ind2 * 3 + 1], model.tempV[ind2 * 3 + 2]);
+
+            res[i * 6 + 2] = new Point3(model.tempV[ind2 * 3], model.tempV[ind2 * 3 + 1], model.tempV[ind2 * 3 + 2]);
+            res[i * 6 + 3] = new Point3(model.tempV[ind3 * 3], model.tempV[ind3 * 3 + 1], model.tempV[ind3 * 3 + 2]);
+
+            res[i * 6 + 4] = new Point3(model.tempV[ind3 * 3], model.tempV[ind3 * 3 + 1], model.tempV[ind3 * 3 + 2]);
+            res[i * 6 + 5] = new Point3(model.tempV[ind1 * 3], model.tempV[ind1 * 3 + 1], model.tempV[ind1 * 3 + 2]);
+        }
+        for (int i = 0; i < res.length; i++) {
+            res2[i * 3] = (float)res[i].x;
+            res2[i * 3 + 1] = (float)res[i].y;
+            res2[i * 3 + 2] = (float)res[i].z;
+        }
+        return res2;
+    }
+
     public static float[] convertFromPointsGlCoord(Point[] points, int widthSurf, int heightSurf) {
         float[] res = new float[points.length * 2];
         for (int i = 0; i < points.length; i++) {
