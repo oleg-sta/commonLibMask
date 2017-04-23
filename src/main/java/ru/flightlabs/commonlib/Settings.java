@@ -20,4 +20,5 @@ public class Settings {
     public static Class clazz;
 
     public static Integer resourceLogo;
+    public static boolean useBroader;
 }

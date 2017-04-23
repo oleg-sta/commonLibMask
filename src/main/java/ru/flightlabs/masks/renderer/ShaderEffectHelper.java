@@ -64,9 +64,9 @@ public class ShaderEffectHelper {
         GLES20.glFlush();
     }
 
-    public static void effect2dLines(int width, int height, int programId, int vPos, float[] verticesParticels) {
+    public static void effect2dLines(int width, int height, int programId, int vPos, float[] verticesParticels, float[] color) {
         GLES20.glUseProgram(programId);
-        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_color"), 1, 0, 0);
+        GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "f_color"), color[0], color[1], color[2]);
         FloatBuffer vertexData = convertArray(verticesParticels);
         GLES20.glVertexAttribPointer(vPos, 2, GLES20.GL_FLOAT, false, 0, vertexData);
         GLES20.glDrawArrays(GLES20.GL_LINES, 0, verticesParticels.length / 2);

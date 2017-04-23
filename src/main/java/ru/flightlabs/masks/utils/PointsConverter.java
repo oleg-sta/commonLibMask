@@ -28,6 +28,39 @@ public class PointsConverter {
         return res;
     }
 
+    public static float[] convertFromProjectedTo2dPoints(Mat projected, int widthSurf, int heightSurf) {
+        float[] res2 = new float[projected.cols() * projected.rows()];
+        float[] res = new float[projected.cols() * projected.rows() / 3 * 2];
+        matToFloatArray(projected, res2);
+        for (int i = 0; i < res2.length / 3; i++) {
+            res[i * 2] = res2[i * 3] / widthSurf * 2 - 1;
+            res[i * 2 + 1] = (1 - res2[i * 3 + 1] / heightSurf) * 2 - 1;
+        }
+        return res;
+    }
+
+    public static float[] getLinesFromModel2(float[] floats, Model model) {
+        Point[] res = new Point[model.indices.length * 2];
+        float[] res2 = new float[model.indices.length * 2 * 2];
+        for (int i = 0; i < model.indices.length / 3; i++) {
+            short ind1 = model.indices[i * 3];
+            short ind2 = model.indices[i * 3 + 1];
+            short ind3 = model.indices[i * 3 + 2];
+            res[i * 6] = new Point(floats[ind1 * 2], floats[ind1 * 2 + 1]);
+            res[i * 6 + 1] = new Point(floats[ind2 * 2], floats[ind2 * 2 + 1]);
+
+            res[i * 6 + 2] = new Point(floats[ind2 * 2], floats[ind2 * 2 + 1]);
+            res[i * 6 + 3] = new Point(floats[ind3 * 2], floats[ind3 * 2 + 1]);
+
+            res[i * 6 + 4] = new Point(floats[ind3 * 2], floats[ind3 * 2 + 1]);
+            res[i * 6 + 5] = new Point(floats[ind1 * 2], floats[ind1 * 2 + 1]);
+        }
+        for (int i = 0; i < res.length; i++) {
+            res2[i * 2] = (float)res[i].x;
+            res2[i * 2 + 1] = (float)res[i].y;
+        }
+        return res2;
+    }
 
     public static float[] getPointsFromModel(Model model) {
         Point3[] res = new Point3[model.tempV.length / 3];
@@ -269,4 +302,5 @@ public class PointsConverter {
         }
         return res;
     }
+
 }

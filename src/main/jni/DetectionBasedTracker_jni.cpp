@@ -35,7 +35,7 @@
 using namespace std;
 using namespace cv;
 using namespace dlib;
-const int n_blendshapes = 3;
+const int n_blendshapes = 4;
 
 //inline void vector_Rect_to_Mat(cv::vector<Rect>& v_rect, Mat& mat)
 //{
@@ -570,14 +570,16 @@ JNIEXPORT jint JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace
 }
 
 JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
-(JNIEnv * jenv, jclass, jlong jmatrix2dLands, jlong jmatrix3dFace, jlong jinitialParams, jlong model3dL, jint flag, jint juseLinear)
+(JNIEnv * jenv, jclass, jlong jmatrix2dLands, jlong jmatrix3dFace, jlong jinitialParams, jlong model3dL, jint flag, jint juseLinear, jint useBroader, jlong jmatrix3dOrtho)
 {
     LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace enter");
     LOGD("morhpFace3 %i", juseLinear );
+    LOGD("morhpFace3 %i useBroader", useBroader );
     bool useLinear = (juseLinear == 1)? true : false;
     cv::Mat matrix3dFace = *((Mat*)jmatrix3dFace);
     cv::Mat initialParams0 = *((Mat*)jinitialParams);
     cv::Mat matrix2dLands = *((Mat*)jmatrix2dLands);
+    cv::Mat matrix3dOrtho = *((Mat*)jmatrix3dOrtho);
     matrix<double> landmarks; // TODO
     landmarks.set_size(2, matrix2dLands.rows);
     for (int i = 0; i < matrix2dLands.rows; i++) {
@@ -637,6 +639,11 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
      initial_parameters(7,0) = initial_parameters_box_constrained(7,0);
      initial_parameters(8,0) = initial_parameters_box_constrained(8,0);
 
+        if (useBroader == 1)
+            initial_parameters(9,0) = initial_parameters_box_constrained(3,0);
+
+        initial_parameters(9,0) = 1.4;
+
      }
      else
      {
@@ -685,7 +692,12 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
             initial_parameters(7,0) = blend_coeffs(1,0);
             initial_parameters(8,0) = blend_coeffs(2,0);
 
-    }
+            if (useBroader == 1)
+            initial_parameters(9,0) = blend_coeffs(3,0);
+
+            initial_parameters(9,0) = 1.4;
+
+     }
      // experiment
 
     /*
@@ -700,16 +712,25 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
     std::unordered_map<int, dlib::matrix<double>> all_blendshapes = model3d.get_all_blendshapes();
     //dlib::matrix<double> final_shape_3d = projection_model.convert_mean_shape(initialParameters, full_mean_3d, all_blendshapes);
     dlib::matrix<double> final_shape_3d = projection_model.convert_mean_shape(initial_parameters,full_mean_3d,all_blendshapes);
+
+    dlib::matrix<double> final_shape_3d_projected = projection_model.get_full_shape3d(initial_parameters,full_mean_3d,all_blendshapes);
+    LOGD("morhpFace2323 %i %i", final_shape_3d_projected.nc(), final_shape_3d_projected.nr());
+    LOGD("morhpFace2323 %f %f %f", final_shape_3d_projected(0, 0), final_shape_3d_projected(1, 0), final_shape_3d_projected(2, 0));
+
     LOGD("morhpFace2 %i %i %i", final_shape_3d.nc(), initialParameters.nr(), initialParameters.nc());
-    LOGD("morhpFace2 params %f %f", initial_parameters_box_constrained(0, 6), initial_parameters_box_constrained(0, 7));
-    LOGD("morhpFace2 params %f %f", initial_parameters_box_constrained(6, 0), initial_parameters_box_constrained(7, 0));
-    LOGD("morhpFace2 %f %f %f", final_shape_3d(0,0), final_shape_3d(1,0), final_shape_3d(2,0));
-    LOGD("morhpFace2 %f %f %f", full_mean_3d(0,0), full_mean_3d(1,0), full_mean_3d(2,0));
+    LOGD("morhpFace2 params %f %f %f %f", initial_parameters(0, 6), initial_parameters(0, 7), initial_parameters(0, 8), initial_parameters(0, 9));
+    //LOGD("morhpFace2 %f %f %f", final_shape_3d(0,0), final_shape_3d(1,0), final_shape_3d(2,0));
+    //LOGD("morhpFace2 %f %f %f", full_mean_3d(0,0), full_mean_3d(1,0), full_mean_3d(2,0));
     for (int i = 0; i < final_shape_3d.nc(); ++i)
     {
        matrix3dFace.at<double>(i, 0) = final_shape_3d(0,i);
        matrix3dFace.at<double>(i, 1) = final_shape_3d(1,i);
        matrix3dFace.at<double>(i, 2) = final_shape_3d(2,i);
+
+        // debug for ortho
+        matrix3dOrtho.at<double>(i, 0) = final_shape_3d_projected(0,i);
+        matrix3dOrtho.at<double>(i, 1) = final_shape_3d_projected(1,i);
+        matrix3dOrtho.at<double>(i, 2) = final_shape_3d_projected(2,i);
     }
     for (int i = 0; i < 6+n_blendshapes; i++)
     {

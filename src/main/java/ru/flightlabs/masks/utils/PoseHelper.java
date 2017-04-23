@@ -175,6 +175,7 @@ public class PoseHelper {
         int indexEye = Static.currentIndexEye;
         Log.i(TAG, "indexEye " + indexEye);
 
+        Mat projected = new Mat(113, 3, CvType.CV_64FC1);
         if (foundLandmarks != null) {
             if (shapeBlends) {
                 Mat inputLandMarks = PointsConverter.points2dToMat(foundLandmarks);//new Mat(68, 2, CvType.CV_64FC1);
@@ -182,17 +183,24 @@ public class PoseHelper {
                 if (initialParams == null) {
                     initialParams = new Mat(20, 1, CvType.CV_64FC1, new Scalar(0));
                 }
+                boolean deleteDir = false;
                 if (modelPath == null) {
                     if (new File("/storage/extSdCard/models").exists()) {
                         modelPath = "/storage/extSdCard/models";
                     } else {
+                        deleteDir = true;
                         File cascadeDir = context.getDir("models", Context.MODE_PRIVATE);
+                        deleteRecursive(cascadeDir); // delete previous morph model
+                        cascadeDir = context.getDir("models", Context.MODE_PRIVATE);
                         Decompress.unzipFromAssets(context, "models.zip", cascadeDir.getPath());
                         modelPath = cascadeDir.getPath();
                     }
                     Log.i(TAG, "onCameraTexture1 " + modelPath);
                 }
-                mNativeDetector.morhpFace(inputLandMarks, output3dShape, initialParams, modelPath, true, Settings.useLinear);
+                mNativeDetector.morhpFace(inputLandMarks, output3dShape, initialParams, modelPath, true, Settings.useLinear, Settings.useBroader, projected);
+                if (deleteDir) {
+                    deleteRecursive(new File(modelPath));
+                }
                 PointsConverter.matToFloatArray(output3dShape, model.tempV);
                 model.recalcV();
             }
@@ -206,6 +214,7 @@ public class PoseHelper {
 
         }
         PoseResult result = new PoseResult();
+        result.projected = projected;
         result.glMatrix = glMatrix;
         result.foundFeatures = foundLandmarks != null;
         result.leftEye = center;
@@ -213,6 +222,14 @@ public class PoseHelper {
         result.foundLandmarks = foundLandmarks;
         previous = foundLandmarks;
         return result;
+    }
+
+    void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory())
+            for (File child : fileOrDirectory.listFiles())
+                deleteRecursive(child);
+
+        fileOrDirectory.delete();
     }
 
     // FIXME use only one size factor, from center of image
@@ -425,6 +442,7 @@ public class PoseHelper {
         public Point leftEye;
         public Point rightEye;
         public Point[] foundLandmarks;
+        public Mat projected;
     }
 
 }

@@ -230,6 +230,17 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 ShaderEffectHelper.effect2dPointsFrom3dPoints(widthSurf, heightSurf, programId3dParticle, vPos3, PointsConverter.getOnlyByNumbder(shaderHelper.model.tempV, p3d1), poseResult.glMatrix, new float[]{0,1,0});
 
 
+                // draw projected
+                float[] projected2dpoints = PointsConverter.convertFromProjectedTo2dPoints(poseResult.projected, widthSurf, heightSurf);
+                vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
+                GLES20.glEnableVertexAttribArray(vPos2);
+                ShaderEffectHelper.effect2dParticle(widthSurf, heightSurf, programId2dParticle, vPos2, projected2dpoints, new float[]{0,0,1});
+
+                Log.i(TAG, "onDrawFrame size22 " + projected2dpoints.length);
+                vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
+                GLES20.glEnableVertexAttribArray(vPos2);
+                ShaderEffectHelper.effect2dLines(widthSurf, heightSurf, programId2dParticle, vPos2, PointsConverter.getLinesFromModel2(projected2dpoints, shaderHelper.model), new float[]{0,0,1});
+
             }
             // draw effect on rgba
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
