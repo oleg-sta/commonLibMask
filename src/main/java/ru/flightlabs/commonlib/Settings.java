@@ -21,4 +21,5 @@ public class Settings {
 
     public static Integer resourceLogo;
     public static boolean useBroader;
+    public static boolean addDebug;
 }

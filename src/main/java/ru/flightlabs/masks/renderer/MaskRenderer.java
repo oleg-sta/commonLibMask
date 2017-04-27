@@ -211,35 +211,37 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 GLES20.glEnableVertexAttribArray(vPos2);
                 ShaderEffectHelper.effect2dParticle(widthSurf, heightSurf, programId2dParticle, vPos2, PointsConverter.convertFromPointsGlCoord(poseResult.foundLandmarks, widthSurf, heightSurf), new float[]{1,1,1});
 
-                // draw 3d morph model
-                int vPos3 = GLES20.glGetAttribLocation(programId3dParticle, "vPosition");
-                GLES20.glEnableVertexAttribArray(vPos3);
-                ShaderEffectHelper.effect2dLinesFrom3dPoints(widthSurf, heightSurf, programId3dParticle, vPos3, PointsConverter.getLinesFromModel(shaderHelper.model), poseResult.glMatrix, new float[]{1,0,0});
+                if (Settings.addDebug) {
+                    // draw 3d morph model
+                    int vPos3 = GLES20.glGetAttribLocation(programId3dParticle, "vPosition");
+                    GLES20.glEnableVertexAttribArray(vPos3);
+                    ShaderEffectHelper.effect2dLinesFrom3dPoints(widthSurf, heightSurf, programId3dParticle, vPos3, PointsConverter.getLinesFromModel(shaderHelper.model), poseResult.glMatrix, new float[]{1, 0, 0});
 
 
-                String[] p3d = context.getResources().getStringArray(R.array.points2DTo3D);
-                int[] p3d1 = new int[p3d.length];
-                for (int i = 0; i < p3d.length; i++) {
-                    String p = p3d[i];
-                    String[] w2 = p.split(";");
-                    p3d1[i] = Integer.parseInt(w2[1]);
+                    String[] p3d = context.getResources().getStringArray(R.array.points2DTo3D);
+                    int[] p3d1 = new int[p3d.length];
+                    for (int i = 0; i < p3d.length; i++) {
+                        String p = p3d[i];
+                        String[] w2 = p.split(";");
+                        p3d1[i] = Integer.parseInt(w2[1]);
+                    }
+                    // draw 3d2d 2d points
+                    vPos2 = GLES20.glGetAttribLocation(programId3dParticle, "vPosition");
+                    GLES20.glEnableVertexAttribArray(vPos2);
+                    ShaderEffectHelper.effect2dPointsFrom3dPoints(widthSurf, heightSurf, programId3dParticle, vPos3, PointsConverter.getOnlyByNumbder(shaderHelper.model.tempV, p3d1), poseResult.glMatrix, new float[]{0, 1, 0});
+
+
+                    // draw projected
+                    float[] projected2dpoints = PointsConverter.convertFromProjectedTo2dPoints(poseResult.projected, widthSurf, heightSurf);
+                    vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
+                    GLES20.glEnableVertexAttribArray(vPos2);
+                    ShaderEffectHelper.effect2dParticle(widthSurf, heightSurf, programId2dParticle, vPos2, projected2dpoints, new float[]{0, 0, 1});
+
+                    Log.i(TAG, "onDrawFrame size22 " + projected2dpoints.length);
+                    vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
+                    GLES20.glEnableVertexAttribArray(vPos2);
+                    ShaderEffectHelper.effect2dLines(widthSurf, heightSurf, programId2dParticle, vPos2, PointsConverter.getLinesFromModel2(projected2dpoints, shaderHelper.model), new float[]{0, 0, 1});
                 }
-                // draw 3d2d 2d points
-                vPos2 = GLES20.glGetAttribLocation(programId3dParticle, "vPosition");
-                GLES20.glEnableVertexAttribArray(vPos2);
-                ShaderEffectHelper.effect2dPointsFrom3dPoints(widthSurf, heightSurf, programId3dParticle, vPos3, PointsConverter.getOnlyByNumbder(shaderHelper.model.tempV, p3d1), poseResult.glMatrix, new float[]{0,1,0});
-
-
-                // draw projected
-                float[] projected2dpoints = PointsConverter.convertFromProjectedTo2dPoints(poseResult.projected, widthSurf, heightSurf);
-                vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
-                GLES20.glEnableVertexAttribArray(vPos2);
-                ShaderEffectHelper.effect2dParticle(widthSurf, heightSurf, programId2dParticle, vPos2, projected2dpoints, new float[]{0,0,1});
-
-                Log.i(TAG, "onDrawFrame size22 " + projected2dpoints.length);
-                vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
-                GLES20.glEnableVertexAttribArray(vPos2);
-                ShaderEffectHelper.effect2dLines(widthSurf, heightSurf, programId2dParticle, vPos2, PointsConverter.getLinesFromModel2(projected2dpoints, shaderHelper.model), new float[]{0,0,1});
 
             }
             // draw effect on rgba
