@@ -14,7 +14,7 @@ import android.util.Log;
 
 public class DetectionBasedTracker
 {
-    public DetectionBasedTracker(String cascadeName, int minFaceSize, String modelSp) {
+    public DetectionBasedTracker(String cascadeName, int minFaceSize, String modelSp, String lbpFrontalPath, String lbpLeftPath, String lbpRightPath) {
         mNativeObj = nativeCreateObject(cascadeName, minFaceSize);
         if (new File(modelSp).exists()) {
             Log.e("DetectionBasedTracker", "findLandMarks DetectionBasedTracker !" + modelSp);
@@ -25,7 +25,7 @@ public class DetectionBasedTracker
         } else {
             Log.e("DetectionBasedTracker", "findLandMarks file doesn't exists !" + modelSp);
         }
-        mNativeFaceFollower = trackFaceInit(modelSp, cascadeName);
+        mNativeFaceFollower = trackFaceInit(modelSp, cascadeName, lbpFrontalPath, lbpLeftPath, lbpRightPath);
 
         Log.e("DetectionBasedTracker", "findLandMarks mNativeModel " + mNativeModel);
     }
@@ -77,8 +77,8 @@ public class DetectionBasedTracker
     }
 
     @Deprecated
-    public void trackFaceInit2(String modelFeatures, String modelHaar) {
-        mNativeFaceFollower = trackFaceInit(modelFeatures, modelHaar);
+    public void trackFaceInit2(String modelFeatures, String modelHaar, String lpbFront, String lbpLeft, String lbpRight) {
+        mNativeFaceFollower = trackFaceInit(modelFeatures, modelHaar, lpbFront, lbpLeft, lbpRight);
     }
 
     public boolean trackFace(Mat imgGrey, Mat prevFace, Mat lands, boolean prevFaceFound) {
@@ -105,7 +105,7 @@ public class DetectionBasedTracker
     private static native void morhpFace(long jmatrix2dLands, long jmatrix3dFace, long jmatrixinitial, long modelpath, int flag, int useLinear, int useBrodader, long projected3d);
     private static native long morhpFaceInit(String modelpath);
 
-    private static native long trackFaceInit(String str, String str2);
+    private static native long trackFaceInit(String str, String str2, String lbpFrontalPath, String lbpLeftPath, String lbpRightPath);
     private static native int trackFace(long jGreyImg, long jmatrixFacePrev, long jmatrix2dLands, int flag, long model);
     
 }

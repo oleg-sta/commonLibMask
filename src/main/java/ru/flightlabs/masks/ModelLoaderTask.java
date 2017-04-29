@@ -129,7 +129,7 @@ public class ModelLoaderTask extends AsyncTask<CompModel, Void, Void> {
                 Log.i(TAG, "ModelLoaderTask doInBackground667", e);
             }
         }
-        compModel.mNativeDetector = new DetectionBasedTracker(compModel.mCascadeFile.getAbsolutePath(), 0, detectorName);
+        compModel.mNativeDetector = new DetectionBasedTracker(compModel.mCascadeFile.getAbsolutePath(), 0, detectorName, compModel.lbpFrontalPath.getAbsolutePath(), compModel.lbpLeftPath.getAbsolutePath(), compModel.lbpRightPat.getAbsolutePath());
         Log.i(TAG, "ModelLoaderTask doInBackground7");
         return null;
     }

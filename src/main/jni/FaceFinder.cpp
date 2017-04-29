@@ -6,14 +6,35 @@
 
 FaceFinder::FaceFinder() { }
 
-FaceFinder::FaceFinder(std::string &cascadePath)
+FaceFinder::FaceFinder(std::string &cascadePath, std::string &cascadePathLbpFrontal, std::string &cascadePathLbpLeft, std::string &cascadePathLbpRight)
 {
 	pathToCascadeFace = cascadePath;
 
 	//Get cascade face detector
-	if (!faceCascade.load(pathToCascadeFace))
+	if (!faceCascadeHaar.load(pathToCascadeFace))
 	{
-		std::cout << "Error loading face cascade" << std::endl;
+		std::cout << "Error loading face cascade Haar" << std::endl;
+		return;
+	}
+
+	//Get cascade face detector
+	if (!faceCascadeLbpFrontal.load(cascadePathLbpFrontal))
+	{
+		std::cout << "Error loading face cascade LBP frontal" << std::endl;
+		return;
+	}
+
+	//Get cascade face detector
+	if (!faceCascadeLbpLeft.load(cascadePathLbpLeft))
+	{
+		std::cout << "Error loading face cascade LBP left" << std::endl;
+		return;
+	}
+
+	//Get cascade face detector
+	if (!faceCascadeLbpRight.load(cascadePathLbpRight))
+	{
+		std::cout << "Error loading face cascade LBP right" << std::endl;
 		return;
 	}
 }
@@ -25,15 +46,6 @@ FaceFinder::~FaceFinder()
 //------------------------------------------------------------------------------------------//
 //-----------------------------------Setters and getters------------------------------------//
 //------------------------------------------------------------------------------------------//
-
-void FaceFinder::setPathToCascadeFace(std::string path)
-{
-	pathToCascadeFace = path;
-	if (!faceCascade.load(pathToCascadeFace))
-	{
-		std::cout << "Error loading face cascade" << std::endl;
-	}
-}
 
 void FaceFinder::setNumIntersect(int input)
 {
@@ -70,12 +82,7 @@ void FaceFinder::setMaxFacePrevFraction(double input)
 	maxFacePrevFraction = input;
 }
 
-void FaceFinder::setRoiResize(double input)
-{
-	roiResize = input;
-}
 
-std::string FaceFinder::getPathToCascadeFace() { return pathToCascadeFace; }
 int FaceFinder::getNumIntersect() { return numIntersect; }
 int FaceFinder::getNumRescalingsFullScan() { return numRescalingsFullScan; }
 int FaceFinder::getNumRescalingsShortScan() { return numRescalingsShortScan; }
@@ -83,12 +90,9 @@ double FaceFinder::getMinFaceFractionScreenFullScan() { return minFaceFractionSc
 double FaceFinder::getMaxFaceFractionScreenFullScan() { return maxFaceFractionScreenFullScan; }
 double FaceFinder::getMinFacePrevFraction() { return minFacePrevFraction; }
 double FaceFinder::getMaxFacePrevFraction() { return maxFacePrevFraction; }
-double FaceFinder::getRoiResize() { return roiResize; }
-
 int FaceFinder::getMinFaceShortScan() { return minFaceShortScan; }
 int FaceFinder::getMaxFaceShortScan() { return maxFaceShortScan; }
 double FaceFinder::getScaleShortScan() { return scaleShortScan; }
-cv::Rect FaceFinder::getRoiRect() { return roiRect; }
 
 
 //------------------------------------------------------------------------------------------//
@@ -111,79 +115,8 @@ void FaceFinder::violaJonesParametersFullScan(const cv::Mat &frame)
 	scaleFullScan = pow(maxFaceFractionScreenFullScan / minFaceFractionScreenFullScan, 1.0 / ((double)numRescalingsFullScan - 1.0));
 }
 
-void FaceFinder::violaJonesParametersShortScan(const cv::Mat &frame, cv::Rect &prevFaceLocation)
-{
-	//scaleShortScan = pow(maxFacePrevFraction / minFacePrevFraction, 1.0 / ((double)numRescalingsShortScan - 1.0));
-	minFaceShortScan = (int)(((double)prevFaceLocation.width) * minFacePrevFraction);
-	maxFaceShortScan = (int)(((double)prevFaceLocation.width) * maxFacePrevFraction);
-
-	//Check that maximum face size is not bigger than the frame
-	if (maxFaceShortScan > frame.cols)
-	{
-		maxFaceShortScan = frame.cols - 1;
-	}
-
-	if (maxFaceShortScan > frame.rows || maxFaceShortScan > frame.cols)
-	{
-		maxFaceShortScan = frame.rows - 1;
-	}
-
-	//The same for minimum
-	if (minFaceShortScan > frame.cols)
-	{
-		minFaceShortScan = frame.cols - 1;
-	}
-
-	if (minFaceShortScan > frame.rows || minFaceShortScan > frame.cols)
-	{
-		minFaceShortScan = frame.rows - 1;
-	}
-
-	scaleShortScan = pow( ((double) maxFaceShortScan) / ((double) minFaceShortScan), 1.0 / ((double)numRescalingsShortScan - 1.0));
-
-	//How much we move coordinates of the left upper corner
-	int delta = (int)(roiResize*((double)prevFaceLocation.width) / 2.0);
-
-	if (prevFaceLocation.x > delta)
-	{
-		roiRect.x = prevFaceLocation.x - delta;
-	}
-	else
-	{
-		roiRect.x = 0;
-	}
-
-	if (prevFaceLocation.y > delta)
-	{
-		roiRect.y = prevFaceLocation.y - delta;
-	}
-	else
-	{
-		roiRect.y = 0;
-	}
-
-	if (roiRect.x + prevFaceLocation.width + 2 * delta < frame.cols)
-	{
-		roiRect.width = prevFaceLocation.width + 2 * delta;
-	}
-	else
-	{
-		roiRect.width = frame.cols - roiRect.x - 1;
-	}
-
-	if (roiRect.y + prevFaceLocation.width + 2 * delta < frame.rows)
-	{
-		roiRect.height = prevFaceLocation.width + 2 * delta;
-	}
-	else
-	{
-		roiRect.height = frame.rows - roiRect.y - 1;
-	}
-}
-
 void FaceFinder::violaJonesParametersShortScan(const cv::Mat &frame, int prevWidth)
 {
-	//scaleShortScan = pow(maxFacePrevFraction / minFacePrevFraction, 1.0 / ((double)numRescalingsShortScan - 1.0));
 	minFaceShortScan = (int)(((double)prevWidth) * minFacePrevFraction);
 	maxFaceShortScan = (int)(((double)prevWidth) * maxFacePrevFraction);
 
@@ -217,7 +150,7 @@ void FaceFinder::violaJonesParametersShortScan(const cv::Mat &frame, int prevWid
 //------------------------------------Viola Jones scan--------------------------------------//
 //------------------------------------------------------------------------------------------//
 
-bool FaceFinder::violaJonesScan(const cv::Mat &frame, cv::Rect &faceLocation)
+bool FaceFinder::violaJonesScanHaar(const cv::Mat &frame, cv::Rect &faceLocation)
 {
 	//Calculate parameters
 	violaJonesParametersFullScan(frame);
@@ -226,7 +159,7 @@ bool FaceFinder::violaJonesScan(const cv::Mat &frame, cv::Rect &faceLocation)
 	std::vector<cv::Rect> faces;
 
 	//Apply cascade face detector
-	faceCascade.detectMultiScale(frame, faces, 1.1, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE , cv::Size(minFaceFullScan, minFaceFullScan), cv::Size(maxFaceFullScan, maxFaceFullScan));
+	faceCascadeHaar.detectMultiScale(frame, faces, scaleFullScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceFullScan, minFaceFullScan), cv::Size(maxFaceFullScan, maxFaceFullScan));
 
 	//Check that we found a face
 	if (faces.size() > 0)
@@ -240,24 +173,21 @@ bool FaceFinder::violaJonesScan(const cv::Mat &frame, cv::Rect &faceLocation)
 	}
 }
 
-//Scan in certain ROI based on the previous face location
-bool FaceFinder::violaJonesScanROI(const cv::Mat &frame, cv::Rect &prevFaceLocation, cv::Rect &newFaceLocation)
+bool FaceFinder::violaJonesScanLbp(const cv::Mat &frame, cv::Rect &faceLocation)
 {
-	//Calculate parameters for scan
-	violaJonesParametersShortScan(frame, prevFaceLocation);
-
-	cv::Mat searchArea = frame(roiRect);//Area for face search
+	//Calculate parameters
+	violaJonesParametersFullScan(frame);
 
 	//Vector with faces
 	std::vector<cv::Rect> faces;
 
-	faceCascade.detectMultiScale(searchArea, faces, scaleShortScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceShortScan, minFaceShortScan), cv::Size(maxFaceShortScan, maxFaceShortScan));
+	//Apply cascade face detector
+	faceCascadeLbpFrontal.detectMultiScale(frame, faces, scaleFullScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceFullScan, minFaceFullScan), cv::Size(maxFaceFullScan, maxFaceFullScan));
 
+	//Check that we found a face
 	if (faces.size() > 0)
 	{
-		faces[0].x = roiRect.x + faces[0].x;
-		faces[0].y = roiRect.y + faces[0].y;
-		newFaceLocation = faces[0];
+		faceLocation = faces[0];
 		return true;
 	}
 	else
@@ -266,7 +196,7 @@ bool FaceFinder::violaJonesScanROI(const cv::Mat &frame, cv::Rect &prevFaceLocat
 	}
 }
 
-bool FaceFinder::violaJonesScanROI(const cv::Mat & frame, int prevWidth, cv::Rect & newFaceLocation)
+bool FaceFinder::violaJonesScanROIHaar(const cv::Mat & frame, int prevWidth, cv::Rect & newFaceLocation)
 {
 	//Calculate parameters for scan
 	violaJonesParametersShortScan(frame, prevWidth);
@@ -274,12 +204,10 @@ bool FaceFinder::violaJonesScanROI(const cv::Mat & frame, int prevWidth, cv::Rec
 	//Vector with faces
 	std::vector<cv::Rect> faces;
 
-	faceCascade.detectMultiScale(frame, faces, scaleShortScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceShortScan, minFaceShortScan), cv::Size(maxFaceShortScan, maxFaceShortScan));
+	faceCascadeHaar.detectMultiScale(frame, faces, scaleShortScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceShortScan, minFaceShortScan), cv::Size(maxFaceShortScan, maxFaceShortScan));
 
 	if (faces.size() > 0)
 	{
-		faces[0].x = roiRect.x + faces[0].x;
-		faces[0].y = roiRect.y + faces[0].y;
 		newFaceLocation = faces[0];
 		return true;
 	}
@@ -289,57 +217,49 @@ bool FaceFinder::violaJonesScanROI(const cv::Mat & frame, int prevWidth, cv::Rec
 	}
 }
 
-//First reduce an image by factor 2 until it reaches a certain minimum size and then apply ROI Viola-Jones scan
-bool FaceFinder::violaJonesScanROIContract(const cv::Mat & frame, cv::Rect & prevFaceLocation, cv::Rect & newFaceLocation)
+bool FaceFinder::violaJonesScanROILbp(const cv::Mat & frame, int prevWidth, cv::Rect & newFaceLocation)
 {
-	//Recalculate parameters for scan
-	violaJonesParametersShortScan(frame, prevFaceLocation);
-
-	cv::Mat searchArea;//Area for face search
-        cv::Mat rrr = frame(roiRect);
-	int factor = reduceByTwo(rrr, searchArea);
+	//Calculate parameters for scan
+	violaJonesParametersShortScan(frame, prevWidth);
 
 	//Vector with faces
 	std::vector<cv::Rect> faces;
 
-	//Calculate the result mininmum and maximum face size
-	minFaceShortScan = minFaceShortScan / factor;
-	maxFaceShortScan = maxFaceShortScan / factor;
-
-	faceCascade.detectMultiScale(searchArea, faces, scaleShortScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceShortScan, minFaceShortScan), cv::Size(maxFaceShortScan, maxFaceShortScan));
+	//Apply frontal LBP
+	faceCascadeLbpFrontal.detectMultiScale(frame, faces, scaleShortScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceShortScan, minFaceShortScan), cv::Size(maxFaceShortScan, maxFaceShortScan));
 
 	if (faces.size() > 0)
 	{
-		faces[0].x = roiRect.x + factor*faces[0].x;
-		faces[0].y = roiRect.y + factor*faces[0].y;
-		faces[0].width = factor * faces[0].width;
-		faces[0].height = factor * faces[0].height;
 		newFaceLocation = faces[0];
 		return true;
 	}
 	else
 	{
-		return false;
+		//Apply left LBP
+		faceCascadeLbpLeft.detectMultiScale(frame, faces, scaleShortScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceShortScan, minFaceShortScan), cv::Size(maxFaceShortScan, maxFaceShortScan));
+
+		if (faces.size() > 0)
+		{
+			newFaceLocation = faces[0];
+			return true;
+		}
+		else
+		{
+			//Apply right LBP
+			faceCascadeLbpRight.detectMultiScale(frame, faces, scaleShortScan, numIntersect, 0 | cv::CASCADE_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(minFaceShortScan, minFaceShortScan), cv::Size(maxFaceShortScan, maxFaceShortScan));
+
+			if (faces.size() > 0)
+			{
+				newFaceLocation = faces[0];
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	}
 }
 
-//------------------------------------------------------------------------------------------//
-//----------------------------------Supplementary methods-----------------------------------//
-//------------------------------------------------------------------------------------------//
 
-//Reduce an image by factor 2 until it reaches specified minimum size
-//Returns the factor by which we reduce an image
-int FaceFinder::reduceByTwo(cv::Mat &input, cv::Mat &output)
-{
-	//Find the number of reductions
-	int k = 1;//the number of reductions
-	while (minSize * (2 ^ k) < input.rows)
-	{
-		k++;
-	}
 
-	//INTER_NEAREST
-	resize(input, output, cv::Size(), 1.0 / ((float)(2 ^ (k - 1))), 1.0 / ((float)(2 ^ (k - 1))), cv::INTER_LINEAR);
-
-	return 2 ^ (k - 1);
-}

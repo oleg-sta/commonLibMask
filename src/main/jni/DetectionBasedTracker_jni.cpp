@@ -514,14 +514,22 @@ JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
 }
 
 JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFaceInit
-        (JNIEnv * jenv, jclass, jstring path, jstring path2)
+        (JNIEnv * jenv, jclass, jstring path, jstring path2, jstring jlbpFrontalPath, jstring jlbpLeftPath, jstring jlbpRightPath)
 {
     LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit enter");
     const char* jnamestr = jenv->GetStringUTFChars(path, NULL);
     std::string str(jnamestr);
     const char* jnamestr2 = jenv->GetStringUTFChars(path2, NULL);
     std::string str2(jnamestr2);
-    FaceFollower* model3d = new FaceFollower(str, str2);
+
+    const char* jnamestr3 = jenv->GetStringUTFChars(jlbpFrontalPath, NULL);
+    std::string lbpFrontalPath(jnamestr3);
+    const char* jnamestr4 = jenv->GetStringUTFChars(jlbpLeftPath, NULL);
+    std::string lbpLeftPath(jnamestr4);
+    const char* jnamestr5 = jenv->GetStringUTFChars(jlbpRightPath, NULL);
+    std::string lbpRightPath(jnamestr5);
+
+    FaceFollower* model3d = new FaceFollower(str, str2, lbpFrontalPath, lbpLeftPath, lbpRightPath);
     LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit exit");
     return (jlong)model3d;
 }

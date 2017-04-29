@@ -30,9 +30,31 @@ public class CompModel {
     public Triangle[] trianlges;
     public File mCascadeFile;
 
+    public File lbpFrontalPath;
+    public File lbpLeftPath;
+    public File lbpRightPat;
+
     // in
     public Context context;
 
+    public void load3lbpModels(int resource1, int resource2, int resource3) {
+        File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
+        lbpFrontalPath = new File(cascadeDir, "lbpFrontalPath.xml");
+        lbpLeftPath = new File(cascadeDir, "lbpLeftPath.xml");
+        lbpRightPat = new File(cascadeDir, "lbpRightPat.xml");
+        try {
+            FileUtils.resourceToFile(context.getResources().openRawResource(resource1), lbpFrontalPath);
+            FileUtils.resourceToFile(context.getResources().openRawResource(resource2), lbpLeftPath);
+            FileUtils.resourceToFile(context.getResources().openRawResource(resource3), lbpRightPat);
+        } catch (Resources.NotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
     public void loadHaarModel(int resource) {
         Log.i(TAG, "loadHaarModel " + context.getResources().getResourceName(resource));
         File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);

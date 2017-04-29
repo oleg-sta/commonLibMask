@@ -1,9 +1,10 @@
 #include "LandmarkDetector.h"
+#include "FaceFinder.h"
 
 class FaceFollower
 {
 public:
-	FaceFollower(std::string shapePredictorPath, std::string haarPath);
+	FaceFollower(std::string shapePredictorPath, std::string haarPath, std::string lbpFrontalPath, std::string lbpLeftPath, std::string lbpRightPath);
 	FaceFollower();
 	~FaceFollower();
 

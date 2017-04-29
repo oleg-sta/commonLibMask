@@ -83,7 +83,7 @@ JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
 (JNIEnv * jenv, jclass, jstring path);
 
 JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFaceInit
-        (JNIEnv * jenv, jclass, jstring path, jstring path2);
+        (JNIEnv * jenv, jclass, jstring path, jstring path2, jstring, jstring, jstring);
 // find face with tracking by landmarks
 JNIEXPORT jint JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace
         (JNIEnv * jenv, jclass, jlong jGreyImg, jlong jmatrixFacePrev, jlong jmatrix2dLands, jint flag, jlong);
