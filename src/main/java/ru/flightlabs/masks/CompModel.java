@@ -56,7 +56,7 @@ public class CompModel {
 
     }
     public void loadHaarModel(int resource) {
-        Log.i(TAG, "loadHaarModel " + context.getResources().getResourceName(resource));
+        if (Static.LOG_MODE) Log.i(TAG, "loadHaarModel " + context.getResources().getResourceName(resource));
         File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
 
         mCascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
@@ -74,8 +74,9 @@ public class CompModel {
         if (mJavaDetector.empty()) {
             Log.e(TAG, "Failed to load cascade classifier");
             mJavaDetector = null;
-        } else
-            Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
+        } else {
+            if (Static.LOG_MODE) Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
+        }
 
     }
 

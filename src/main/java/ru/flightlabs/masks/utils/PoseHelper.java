@@ -64,7 +64,7 @@ public class PoseHelper {
     }
 
     public void init(Context context, int width, int height) {
-        Log.i(TAG, "init");
+        if (Static.LOG_MODE) Log.i(TAG, "init");
         intrinsics = Mat.eye(3, 3, CvType.CV_64F);
         int wiid = width < height? width : height;
         intrinsics.put(0, 0, wiid); // ?
@@ -131,7 +131,7 @@ public class PoseHelper {
 
         //Rect[] facesArray = faces.toArray();
         //final boolean haveFace = facesArray.length > 0;
-        Log.i(TAG, "onCameraTexture5 " + prevFaceFound);
+        if (Static.LOG_MODE) Log.i(TAG, "onCameraTexture5 " + prevFaceFound);
         Point center = new Point(0.5, 0.5);
         Point center2 = new Point(0.5, 0.5);
         Point[] foundLandmarks = null;
@@ -139,7 +139,7 @@ public class PoseHelper {
             prevFace = PointsConverter.matTo2dPoints(face4Points);
             previous = PointsConverter.matTo2dPoints(face68Points);
             foundLandmarks = PointsConverter.matTo2dPoints(face68Points);
-            Log.i(TAG, "onCameraTexture5 " + prevFaceFound);
+            if (Static.LOG_MODE) Log.i(TAG, "onCameraTexture5 " + prevFaceFound);
             if (Settings.debugMode) {
                 //Imgproc.rectangle(mRgba, facesArray[0].tl(), facesArray[0].br(), new Scalar(255, 10 ,10), 3);
                 Imgproc.line(mRgba, previous[0], previous[1], new Scalar(255, 10 ,10), 3);
@@ -173,7 +173,7 @@ public class PoseHelper {
 
         Mat glMatrix = null;
         int indexEye = Static.currentIndexEye;
-        Log.i(TAG, "indexEye " + indexEye);
+        if (Static.LOG_MODE) Log.i(TAG, "indexEye " + indexEye);
 
         Mat projected = new Mat(113, 3, CvType.CV_64FC1);
         if (foundLandmarks != null) {
@@ -195,7 +195,7 @@ public class PoseHelper {
                         Decompress.unzipFromAssets(context, "models.zip", cascadeDir.getPath());
                         modelPath = cascadeDir.getPath();
                     }
-                    Log.i(TAG, "onCameraTexture1 " + modelPath);
+                    if (Static.LOG_MODE) Log.i(TAG, "onCameraTexture1 " + modelPath);
                 }
                 mNativeDetector.morhpFace(inputLandMarks, output3dShape, initialParams, modelPath, true, Settings.useLinear, Settings.useBroader, projected);
                 if (deleteDir) {
@@ -266,7 +266,7 @@ public class PoseHelper {
             Calib3d.solvePnP(objectPoints, imagePoints, intrinsics, distCoeffs, rvec, tvec);
         }
         if (Settings.debugMode) {
-            Log.i("wwww2 rvec", rvec.width() + " " + rvec.height() + " " + rvec.type());
+            if (Static.LOG_MODE) Log.i("wwww2 rvec", rvec.width() + " " + rvec.height() + " " + rvec.type());
             Imgproc.putText(mRgba, "tvec " + String.format("%.3f", tvec.get(0, 0)[0]) + String.format(" %.3f", tvec.get(1, 0)[0]) + String.format(" %.3f", tvec.get(2, 0)[0]), new Point(50, 100), Core.FONT_HERSHEY_SIMPLEX, 1,
                     new Scalar(255, 255, 255), 2);
             Imgproc.putText(mRgba, "rvec " + String.format("%.3f", rvec.get(0, 0)[0]) + String.format(" %.3f", rvec.get(1, 0)[0]) + String.format(" %.3f", rvec.get(2, 0)[0]), new Point(50, 150), Core.FONT_HERSHEY_SIMPLEX, 1,

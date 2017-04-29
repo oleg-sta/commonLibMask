@@ -5,6 +5,8 @@ import android.util.Log;
 
 import java.util.List;
 
+import ru.flightlabs.masks.Static;
+
 /**
  * Created by sov on 07.02.2017.
  */
@@ -17,7 +19,7 @@ public class CameraHelper {
     // find the preview size that best suits with aspect ratio and lower max size
     // TODO should consider size and ratio simultaneously, e.g. min( abs(aspect - (float)w/h) + abs(w-maxWidth)/maxWidth + abs(h-maxHeight)/maxHeight)
     public static void calculateCameraPreviewSize(Camera.Parameters param, int maxWidth, int maxHeight) {
-        Log.i(LOGTAG, "calculateCameraPreviewSize: "+maxWidth+"x"+maxHeight);
+        if (Static.LOG_MODE) Log.i(LOGTAG, "calculateCameraPreviewSize: "+maxWidth+"x"+maxHeight);
 
         List<Camera.Size> psize = param.getSupportedPreviewSizes();
         int bestWidth = 0, bestHeight = 0;
@@ -38,13 +40,13 @@ public class CameraHelper {
                 bestHeight = psize.get(0).height;
                 Log.e(LOGTAG, "Error: best size was not selected, using "+bestWidth+" x "+bestHeight);
             } else {
-                Log.i(LOGTAG, "Selected best size: "+bestWidth+" x "+bestHeight);
+                if (Static.LOG_MODE) Log.i(LOGTAG, "Selected best size: "+bestWidth+" x "+bestHeight);
             }
             param.setPreviewSize(bestWidth, bestHeight);
         }
-        Log.i(LOGTAG, "calculateCameraPreviewSize: "+bestWidth+"x"+bestHeight);
+        if (Static.LOG_MODE) Log.i(LOGTAG, "calculateCameraPreviewSize: "+bestWidth+"x"+bestHeight);
         for (Camera.Size size : param.getSupportedPictureSizes()) {
-            Log.i(LOGTAG, "calculateCameraPreviewSize pic size: "+size.width+" x "+size.height);
+            if (Static.LOG_MODE) Log.i(LOGTAG, "calculateCameraPreviewSize pic size: "+size.width+" x "+size.height);
         }
     }
 }
