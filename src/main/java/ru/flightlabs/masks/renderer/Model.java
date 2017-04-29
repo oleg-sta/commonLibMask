@@ -17,6 +17,8 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 
+import ru.flightlabs.masks.Static;
+
 /**
  * Created by sov on 10.12.2016.
  */
@@ -174,7 +176,7 @@ public class Model {
     }
 
     private void loadOBJ(BufferedReader in) throws IOException {
-        Log.d("LOADING FILE", "STARTING!====================");
+        if (Static.LOG_MODE) Log.d("LOADING FILE", "STARTING!====================");
         GroupObject defaultObject = new GroupObject();
         GroupObject currentObject = defaultObject;
 
@@ -306,7 +308,7 @@ public class Model {
         }
 
         for (int i = 0; i < facesSize && false; i++) {
-            Log.d("OBJ OBJECT DATA", "fillInBuffers" + i);
+            if (Static.LOG_MODE) Log.d("OBJ OBJECT DATA", "fillInBuffers" + i);
             Face face = faces.get(i);
             tempV[i * 9] = face.getVertices().get(0).getX();
             tempV[i * 9 + 1] = face.getVertices().get(0).getY();
@@ -369,7 +371,7 @@ public class Model {
         indices = new short[facesSize * 3];
 
         for (int i = 0; i < facesSize; i++) {
-            Log.d("OBJ OBJECT DATA", "fillInBuffers" + i);
+            if (Static.LOG_MODE) Log.d("OBJ OBJECT DATA", "fillInBuffers" + i);
             Face face = faces.get(i);
             tempV[i * 9] = face.getVertices().get(0).getX();
             tempV[i * 9 + 1] = face.getVertices().get(0).getY();

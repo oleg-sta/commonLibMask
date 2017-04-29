@@ -30,7 +30,12 @@
 #include <dlib/opencv/cv_image.h>
 
 #define LOG_TAG "FaceDetection/DetectionBasedTracker"
-#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
+//#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
+#ifndef DEBUG
+#define LOGD(...)
+#else
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
+#endif
 
 using namespace std;
 using namespace cv;
