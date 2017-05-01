@@ -59,16 +59,20 @@ public class PoseHelper {
     boolean prevFaceFound = false;
     Point[] prevFace;
 
+    static int wiiid;
+
     public PoseHelper(CompModel compModel) {
         this.compModel = compModel;
     }
 
     public void init(Context context, int width, int height) {
-        Log.i(TAG, "init");
+        Log.i(TAG, "init " + width + " " + height);
         intrinsics = Mat.eye(3, 3, CvType.CV_64F);
         int wiid = width < height? width : height;
-        intrinsics.put(0, 0, wiid); // ?
-        intrinsics.put(1, 1, wiid); // ?
+        wiiid = wiid;
+        //int wiid = width < height? height : width;
+        intrinsics.put(0, 0, wiid * 3); // ?
+        intrinsics.put(1, 1, wiid * 3); // ?
         intrinsics.put(0, 2, width / 2);
         intrinsics.put(1, 2, height / 2);
         intrinsics.put(2, 2, 1);
@@ -115,6 +119,7 @@ public class PoseHelper {
     // also this method midifies model to blend
     public PoseResult findShapeAndPose(Mat findGray, int mAbsoluteFaceSize, Mat mRgba, int width, int height, boolean shapeBlends, Model model, Context context, int mCameraWidth, int mCameraHeight) {
 //        MatOfRect faces = compModel.findFaces(findGray, mAbsoluteFaceSize);
+        shapeBlends = true;
         DetectionBasedTracker mNativeDetector = compModel.mNativeDetector;
 
 
@@ -160,17 +165,10 @@ public class PoseHelper {
                         foundLandmarks[i].y = kalman * foundLandmarks[i].y + (1.0 - kalman) * previous[i].y;
                     }
                 }
-                // FIXME temp
-                if (Settings.debugMode) {
-                    for (Point p : foundLandmarks) {
-                        Imgproc.circle(mRgba, p, 2, new Scalar(255, 10, 10));
-                    }
-                }
                 center = OpencvUtils.convertToGl(new Point((foundLandmarks[36].x + foundLandmarks[39].x) / 2.0, (foundLandmarks[36].y + foundLandmarks[39].y) / 2.0), width, height);
                 center2 = OpencvUtils.convertToGl(new Point((foundLandmarks[42].x + foundLandmarks[45].x) / 2.0, (foundLandmarks[42].y + foundLandmarks[45].y) / 2.0), width, height);
             }
         }
-
         Mat glMatrix = null;
         int indexEye = Static.currentIndexEye;
         Log.i(TAG, "indexEye " + indexEye);
@@ -220,6 +218,7 @@ public class PoseHelper {
         result.leftEye = center;
         result.rightEye = center2;
         result.foundLandmarks = foundLandmarks;
+        result.initialParams = initialParams;
         previous = foundLandmarks;
         return result;
     }
@@ -248,6 +247,11 @@ public class PoseHelper {
     public Mat findPose(Model model, Point[] foundEyes, Mat mRgba) {
         MatOfDouble distCoeffs = new MatOfDouble();
 
+        int wiid = (int) (wiiid * Math.pow(10, Settings.min));
+        //int wiid = width < height? height : width;
+        intrinsics.put(0, 0, wiid); // ?
+        intrinsics.put(1, 1, wiid); // ?
+
         for (int i = 0; i < p3d1.length; i++) {
             int p3di = p3d1[i];
             int p2di = p2d1[i];
@@ -260,6 +264,7 @@ public class PoseHelper {
         }
         objectPoints.put(0, 0, pointsListArray);
         imagePoints.put(0, 0, pointsList2Array);
+
         if (true) {
             Calib3d.solvePnP(objectPoints, imagePoints, intrinsics, distCoeffs, rvec, tvec, true, Calib3d.CV_ITERATIVE);
         } else {
@@ -301,6 +306,13 @@ public class PoseHelper {
                 Imgproc.line(mRgba, sss2[0], sss2[1], new Scalar(255, 0, 0), 2);
                 Imgproc.line(mRgba, sss2[0], sss2[2], new Scalar(0, 255, 0), 2);
                 Imgproc.line(mRgba, sss2[0], sss2[3], new Scalar(0, 0, 255), 2);
+
+                // draw mesh
+                for (int indi = 0; indi < model.indices.length / 3; indi++) {
+                    Imgproc.line(mRgba, sss[model.indices[indi * 3]], sss[model.indices[indi * 3 + 1]], new Scalar(255, 255, 0));
+                    Imgproc.line(mRgba, sss[model.indices[indi * 3 + 1]], sss[model.indices[indi * 3 + 2]], new Scalar(255, 255, 0));
+                    Imgproc.line(mRgba, sss[model.indices[indi * 3 + 2]], sss[model.indices[indi * 3]], new Scalar(255, 255, 0));
+                }
             }
         }
 
@@ -338,6 +350,19 @@ public class PoseHelper {
         return matrixArray;
     }
 
+    public static float[] convertToArray3(Mat s) {
+        float[] matrixArray = new float[9];
+        for(int row = 0; row < 3; ++row)
+        {
+            for(int col = 0; col < 3; ++col)
+            {
+                //matrixArray[row * 3 + col] = (float)s.get(row, col)[0];
+                matrixArray[row * 3 + col] = (float)s.get(col, row)[0];
+            }
+        }
+        return matrixArray;
+    }
+
     public static void drawDebug(Mat mRgba, Model model, Mat viewMatrix2, Mat intrinsics) {
         Mat viewMatrix = viewMatrix2.submat(0, 3, 0 , 4);
         Point[] points = new Point[model.tempV.length / 3];
@@ -370,9 +395,9 @@ public class PoseHelper {
             Imgproc.circle(mRgba, new Point(x, y), 3, new Scalar(255, 255, 255), -1);
         }
         for (int indi = 0; indi < model.indices.length / 3; indi++) {
-            Imgproc.line(mRgba, points[model.indices[indi * 3]], points[model.indices[indi * 3 + 1]], new Scalar(255, 255, 0));
-            Imgproc.line(mRgba, points[model.indices[indi * 3 + 1]], points[model.indices[indi * 3 + 2]], new Scalar(255, 255, 0));
-            Imgproc.line(mRgba, points[model.indices[indi * 3 + 2]], points[model.indices[indi * 3]], new Scalar(255, 255, 0));
+            Imgproc.line(mRgba, points[model.indices[indi * 3]], points[model.indices[indi * 3 + 1]], new Scalar(255, 0, 255));
+            Imgproc.line(mRgba, points[model.indices[indi * 3 + 1]], points[model.indices[indi * 3 + 2]], new Scalar(255, 0, 255));
+            Imgproc.line(mRgba, points[model.indices[indi * 3 + 2]], points[model.indices[indi * 3]], new Scalar(255, 0, 255));
         }
     }
 
@@ -401,8 +426,11 @@ public class PoseHelper {
     public static float[] createProjectionMatrixThroughPerspective(int width, int height) {
         float[] mProjectionMatrix = new float[16];
         float value = 83.26707f;
-        value = (float) Math.atan(0.5f * height / width) * 2 * 180 / 3.14159f;
-        Matrix.perspectiveM(mProjectionMatrix, 0, value, (float)width / (float)height, 0.01f, 300.0f); // Specifies the field of view angle, in degrees, in the y direction. atan(0.5 * height/ width) * 2
+
+        int wiid = (int) (wiiid * Math.pow(10, Settings.min));
+
+        value = (float) Math.atan(0.5f * height / wiid) * 2 * 180 / 3.14159f;
+        Matrix.perspectiveM(mProjectionMatrix, 0, value, (float)width / (float)height, 0.01f, 300f); // Specifies the field of view angle, in degrees, in the y direction. atan(0.5 * height/ width) * 2
         return mProjectionMatrix;
     }
 
@@ -443,6 +471,7 @@ public class PoseHelper {
         public Point rightEye;
         public Point[] foundLandmarks;
         public Mat projected;
+        public Mat initialParams;
     }
 
 }

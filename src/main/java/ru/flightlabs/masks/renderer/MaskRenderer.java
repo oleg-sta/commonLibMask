@@ -62,6 +62,8 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     ByteBuffer bufferY;
     ByteBuffer bufferUV;
 
+    ByteBuffer buffer22;
+
     Mat greyTemp;
     Mat grey;
     Mat mRgbaDummy;
@@ -142,7 +144,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 if (greyTemp == null) {
                     greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
                     grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
-                    mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
+                    mRgbaDummy = new Mat(heightSurf, widthSurf, CvType.CV_8UC4);
                     bufferY = ByteBuffer.allocateDirect(cameraSize);
                     bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
                 } else if (greyTemp.rows() != mCameraHeight || greyTemp.cols() != mCameraWidth) {
@@ -152,7 +154,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                     mRgbaDummy.release();
                     greyTemp = new Mat(mCameraHeight, mCameraWidth, CvType.CV_8UC1);
                     grey = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC1);
-                    mRgbaDummy = new Mat(mCameraWidth, mCameraHeight, CvType.CV_8UC4);
+                    mRgbaDummy = new Mat(heightSurf, widthSurf, CvType.CV_8UC4);
                     bufferY = ByteBuffer.allocateDirect(cameraSize);
                     bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
                 }
@@ -171,6 +173,9 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 GLES20.glFlush();
                 Log.i(TAG, "onDrawFrame3");
             }
+
+
+
             // if back camera
             //Mat grey = greyTemp.t();
             Core.transpose(greyTemp, grey);
@@ -179,13 +184,6 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             } else {
                 Core.flip(grey, grey, -1);
             }
-
-            if (!wereProcessed) {
-                int mAbsoluteFaceSize = Math.round((int) (mCameraWidth * 0.33));
-                boolean shapeBlends = shaderHelper.needBlend();
-                poseResult = poseHelper.findShapeAndPose(grey, mAbsoluteFaceSize, mRgbaDummy, widthSurf, heightSurf, shapeBlends, shaderHelper.model, context, mCameraHeight, mCameraWidth);
-            }
-
             // convert from NV21 to RGBA
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[0]);
             GLES20.glViewport(0, 0, widthSurf, heightSurf);
@@ -205,8 +203,35 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             ShaderEffectHelper.shaderEffect2dWholeScreen(new Point(0, 0), new Point(widthSurf, heightSurf), texNV21FromCamera[0], programNv21ToRgba, vPos, vTex, texNV21FromCamera[1]);
             Log.i(TAG, "onDrawFrame6");
 
+            if (buffer22 == null) {
+                buffer22 = ByteBuffer.allocateDirect(widthSurf * heightSurf * 4);
+                buffer22.order(ByteOrder.LITTLE_ENDIAN);
+            }
+            GLES20.glReadPixels(0, 0, widthSurf, heightSurf, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer22);
+            buffer22.rewind();
+            mRgbaDummy.put(0, 0, buffer22.array());
+            //Core.transpose(mRgbaDummy, mRgbaDummy);
+            Core.flip(mRgbaDummy, mRgbaDummy, 0);
+
+
+            if (!wereProcessed) {
+                int mAbsoluteFaceSize = Math.round((int) (mCameraWidth * 0.33));
+                boolean shapeBlends = shaderHelper.needBlend();
+                poseResult = poseHelper.findShapeAndPose(grey, mAbsoluteFaceSize, mRgbaDummy, widthSurf, heightSurf, shapeBlends, shaderHelper.model, context, mCameraHeight, mCameraWidth);
+            }
+
+            // super debug ///////1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            Imgproc.line(mRgbaDummy, new Point(0, 0), new Point(100, 200), new Scalar(255, 0, 0), 3);
+            Core.flip(mRgbaDummy, mRgbaDummy, 0);
+            //Core.transpose(mRgbaDummy, mRgbaDummy);
+            buffer22.rewind();
+            mRgbaDummy.get(0, 0, buffer22.array());
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texRgba[0]);
+            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, widthSurf, heightSurf, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer22);
+            ///////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
             // TODO draw debug with shaders
-            if (Settings.debugMode && poseResult.foundLandmarks != null) {
+            if (Settings.debugMode && poseResult.foundLandmarks != null && false) {
                 int vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
                 GLES20.glEnableVertexAttribArray(vPos2);
                 ShaderEffectHelper.effect2dParticle(widthSurf, heightSurf, programId2dParticle, vPos2, PointsConverter.convertFromPointsGlCoord(poseResult.foundLandmarks, widthSurf, heightSurf), new float[]{1,1,1});

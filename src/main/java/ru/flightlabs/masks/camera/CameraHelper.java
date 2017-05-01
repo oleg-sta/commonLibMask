@@ -19,6 +19,7 @@ public class CameraHelper {
     public static void calculateCameraPreviewSize(Camera.Parameters param, int maxWidth, int maxHeight) {
         Log.i(LOGTAG, "calculateCameraPreviewSize: "+maxWidth+"x"+maxHeight);
 
+        //param.get
         List<Camera.Size> psize = param.getSupportedPreviewSizes();
         int bestWidth = 0, bestHeight = 0;
         if (psize.size() > 0) {

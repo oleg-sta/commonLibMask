@@ -22,4 +22,6 @@ public class Settings {
     public static Integer resourceLogo;
     public static boolean useBroader;
     public static boolean addDebug;
+    public static float min = 0.01f;
+    public static boolean flagOrtho;
 }

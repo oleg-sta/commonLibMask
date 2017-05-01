@@ -3,6 +3,8 @@ package ru.flightlabs.masks.renderer;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
@@ -19,6 +21,62 @@ import ru.flightlabs.masks.utils.PoseHelper;
  */
 
 public class ShaderEffectHelper {
+
+    public static void shaderEffect3d2(Mat glMatrix, int texIn, int width, int height, final Model modelToDraw, int modelTextureId, float alpha, int programId, int vPos3d, int vTexFor3d, float[] ortho, int vTexFor3dortho, boolean flagOrtho, Mat initialParams) {
+        GLES20.glUseProgram(programId);
+        int matrixMvp = GLES20.glGetUniformLocation(programId, "u_MVPMatrix");
+
+        float[] matrixView = PoseHelper.convertToArray(glMatrix);
+        float[] mMatrix = new float[16];
+        Matrix.multiplyMM(mMatrix, 0, PoseHelper.createProjectionMatrixThroughPerspective(width, height), 0, matrixView, 0);
+        GLES20.glUniformMatrix4fv(matrixMvp, 1, false, mMatrix, 0);
+
+        int fAlpha = GLES20.glGetUniformLocation(programId, "f_alpha");
+        GLES20.glUniform1f(fAlpha, alpha);
+
+        FloatBuffer mVertexBuffer = modelToDraw.getVertices();
+        mVertexBuffer.position(0);
+        GLES20.glVertexAttribPointer(vPos3d, 3, GLES20.GL_FLOAT, false, 0, mVertexBuffer);
+
+        FloatBuffer mTextureBuffer = modelToDraw.getTexCoords();
+        mTextureBuffer.position(0);
+        GLES20.glVertexAttribPointer(vTexFor3d,  2, GLES20.GL_FLOAT, false, 0, mTextureBuffer);
+
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "ss"), flagOrtho? 1 : 0);
+        if (flagOrtho) {
+            GLES20.glUniform1f(GLES20.glGetUniformLocation(programId, "s"), (float)initialParams.get(0, 0)[0]);
+            GLES20.glUniform3f(GLES20.glGetUniformLocation(programId, "t"), (float)initialParams.get(4, 0)[0], (float)initialParams.get(5, 0)[0], 0);
+            GLES20.glUniform2f(GLES20.glGetUniformLocation(programId, "wid"), width, height);
+            Mat src = new Mat(3, 1, CvType.CV_64FC1);
+            src.put(0, 0, initialParams.get(1, 0));
+            src.put(1, 0, initialParams.get(2, 0));
+            src.put(2, 0, initialParams.get(3, 0));
+            Mat yac = new Mat();
+            Calib3d.Rodrigues(src, yac);
+
+            float[] matrixView3 = PoseHelper.convertToArray3(yac);
+            GLES20.glUniformMatrix3fv(GLES20.glGetUniformLocation(programId, "u_OrthoMatrix"), 1, false, matrixView3, 0);
+
+        }
+        // points from ortho
+        FloatBuffer mTextureBufferortho = convertArray(ortho);
+        mTextureBufferortho.position(0);
+        GLES20.glVertexAttribPointer(vTexFor3dortho,  2, GLES20.GL_FLOAT, false, 0, mTextureBufferortho);
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, modelTextureId);
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_Texture"), 0);
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texIn);
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "u_TextureOrig"), 1);
+
+        ShortBuffer mIndices = modelToDraw.getIndices();
+        mIndices.position(0);
+        // FIXME with glDrawElements use can't use other texture coordinates
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, modelToDraw.getIndicesCount(), GLES20.GL_UNSIGNED_SHORT, mIndices);
+        GLES20.glFlush();
+    }
 
     public static void shaderEffect3d(Mat glMatrix, int texIn, int width, int height, final Model modelToDraw, int modelTextureId, float alpha, int programId, int vPos3d, int vTexFor3d) {
         GLES20.glUseProgram(programId);
