@@ -11,6 +11,8 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 
+import ru.flightlabs.masks.Static;
+
 /**
  * Created by sov on 06.01.2017.
  */
@@ -65,7 +67,7 @@ public class OpenGlHelper {
     }
 
     public static void changeTexture(final Context context, String assetFileName, int texId) {
-        Log.i(TAG, "changeTexture " + assetFileName);
+        if (Static.LOG_MODE) Log.i(TAG, "changeTexture " + assetFileName);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texId);
         // Load the bitmap into the bound texture.
         Bitmap bitmap = getBitmapFromAsset(context, assetFileName);

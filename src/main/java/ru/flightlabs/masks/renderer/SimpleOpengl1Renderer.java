@@ -117,7 +117,7 @@ public class SimpleOpengl1Renderer implements GLSurfaceView.Renderer {
     public void onDrawFrame(GL10 gl) {
 //        if (true) return;
         frameIndex++;
-        Log.i(TAG, "onDrawFrame");
+        if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame");
 
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
         gl.glLoadIdentity();
@@ -176,7 +176,7 @@ public class SimpleOpengl1Renderer implements GLSurfaceView.Renderer {
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        Log.i(TAG, "onSurfaceChanged");
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceChanged");
         gl.glViewport(0, 0, width, height);
         gl.glMatrixMode(GL10.GL_PROJECTION);
         gl.glLoadIdentity();
@@ -190,7 +190,7 @@ public class SimpleOpengl1Renderer implements GLSurfaceView.Renderer {
 
     // FIXME doesn't work
     private void saveScreenshot(GL10 gl, int width, int height) {
-        Log.i(TAG, "saving start ");
+        if (Static.LOG_MODE) Log.i(TAG, "saving start ");
         File file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         File newFile = new File(file, Settings.DIRECTORY_SELFIE);
         File fileJpg = new File(newFile, "eSelfie" + new Random().nextInt(1000) + ".png");
@@ -214,6 +214,6 @@ public class SimpleOpengl1Renderer implements GLSurfaceView.Renderer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Log.i(TAG, "saving end " );
+        if (Static.LOG_MODE) Log.i(TAG, "saving end " );
     }
 }

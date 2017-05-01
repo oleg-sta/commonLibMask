@@ -9,6 +9,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Point3;
 import org.opencv.video.Video;
 
+import ru.flightlabs.masks.Static;
 import ru.flightlabs.masks.model.primitives.Triangle;
 import ru.flightlabs.masks.renderer.Model;
 
@@ -217,11 +218,11 @@ public class PointsConverter {
     public static Point[] completePointsByAffine(Point[] onImage, Point[] texture, int[] correspondence) {
         Mat srcImage = PointsConverter.points2dToMat(onImage);
         Mat srcTexture = PointsConverter.points2dToMat(PointsConverter.reallocateAndCut(texture, correspondence));
-        Log.i("completePointsByAffine", srcTexture.type() + " " + srcTexture.rows() + " " + srcTexture.cols());
-        Log.i("completePointsByAffine", srcImage.type() + " " + srcImage.rows() + " " + srcImage.cols());
+        if (Static.LOG_MODE) Log.i("completePointsByAffine", srcTexture.type() + " " + srcTexture.rows() + " " + srcTexture.cols());
+        if (Static.LOG_MODE) Log.i("completePointsByAffine", srcImage.type() + " " + srcImage.rows() + " " + srcImage.cols());
         //Mat affine = Video.estimateRigidTransform(srcTexture, srcImage, true); // TODO use false,  do not use this method
         Mat affine = solveBy(srcTexture, srcImage); // TODO use false
-        Log.i("completePointsByAffine", affine.type() + " " + affine.rows() + " " + affine.cols());
+        if (Static.LOG_MODE) Log.i("completePointsByAffine", affine.type() + " " + affine.rows() + " " + affine.cols());
         Mat dst = new Mat();
         try {
             Core.gemm(PointsConverter.points2dToMat(texture, true), affine.t(), 1, new Mat(), 0, dst, 0);

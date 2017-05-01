@@ -3,15 +3,12 @@
 //------------------------------------------------------------------//
 //------------------Constructor & Destructor------------------------//
 //------------------------------------------------------------------//
-#include <android/log.h>
-#define LOG_TAG "FaceDetection/DetectionBasedTracker"
-#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
 
-FaceFollower::FaceFollower(std::string shapePredictorPath, std::string haarPath)
+FaceFollower::FaceFollower(std::string shapePredictorPath, std::string haarPath, std::string lbpFrontalPath, std::string lbpLeftPath, std::string lbpRightPath)
 {
 	//Initialize landmark detector and face finder
 	landmarkDetector = LandmarkDetector(shapePredictorPath);
-	faceFinder = FaceFinder(haarPath);
+	faceFinder = FaceFinder(haarPath, lbpFrontalPath, lbpLeftPath, lbpRightPath);
 }
 
 FaceFollower::FaceFollower()
@@ -31,17 +28,14 @@ FaceFollower::~FaceFollower()
 bool FaceFollower::findNewLocation(cv::Mat &frame, cv::Point2f(&newPosition)[4], float(&newLandmarks)[2][68])
 {
 	//Rectangle for Viola Jones search
-	LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace findNewLocation1");
-	bool faceFound = faceFinder.violaJonesScan(frame, faceRectangle);
+	bool faceFound = faceFinder.violaJonesScanLbp(frame, faceRectangle);
 
 	//If we found face
 	if (faceFound)
 	{
-		LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace findNewLocation2");
 		//Apply Dlib landmark detector
 		landmarkDetector.applyDlib(frame, faceRectangle, newLandmarks);
 
-		LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace findNewLocation2");
 		//Get face location via shape
 		faceFound = facePointsViaShape(frame, newLandmarks, newPosition);
 
@@ -77,16 +71,13 @@ bool FaceFollower::findNewLocation(cv::Mat &frame, cv::Point2f(&previousPosition
 		warpAffine(searchArea, rotatedArea, rotationMatrix, searchArea.size());
 
 		//First we check if there is face inside the rotated image - use Viola Jones ROI search using previous face location
-		//success = faceFinder.violaJonesScanROI(rotatedArea, faceRectangle, tempRect);
-		//success = faceFinder.violaJonesScan(rotatedArea, tempRect);
-		success = faceFinder.violaJonesScanROI(rotatedArea, faceRectangle.width, tempRect);
+		success = faceFinder.violaJonesScanROILbp(rotatedArea, faceRectangle.width, tempRect);
 
 		//If there is a face
 		if (success)
 		{
 			//Find landmarks:
 			landmarkDetector.applyDlib(rotatedArea, faceRectangle, tempFaceLandmarks);
-			//landmarkDetector.applyDlib(rotatedArea, tempRect, tempFaceLandmarks);
 
 			//Find new rectangle with face (we don't care about border conditions for a while 'cause after rotation and move back they may fix themselves)
 			success = facePointsViaShape(rotatedArea, tempFaceLandmarks, tempFacePosition);
@@ -94,10 +85,8 @@ bool FaceFollower::findNewLocation(cv::Mat &frame, cv::Point2f(&previousPosition
 			//Update face and landmarks location (rotate back the coordinates)
 			rotationMatrix.release();
 			rotationMatrix = cv::getRotationMatrix2D(rotationPoint, angle, 1.0);//Get affine rotation matrix (anti-clockwise!)
-                        long x = widenFaceRectangle[0].x;
-                        long y = widenFaceRectangle[0].y;
-                        cv::Point2f p1 = cv::Point2f(x, y);
-			success = calcGlobalCoordinates(frame, tempFaceLandmarks, newLandmarks, tempFacePosition, newPosition, p1, rotationMatrix);
+			cv::Point2f point2f(widenFaceRectangle[0].x, widenFaceRectangle[0].y);
+			success = calcGlobalCoordinates(frame, tempFaceLandmarks, newLandmarks, tempFacePosition, newPosition, point2f, rotationMatrix);
 
 			if (success)
 			{
@@ -110,20 +99,6 @@ bool FaceFollower::findNewLocation(cv::Mat &frame, cv::Point2f(&previousPosition
 		}
 		else
 		{
-			//Wtie the image where we were not able to find a face + paramters of search in the name:
-			//width, height, minFace, maxFace, prevFaceX, prevFaceY, prevFaceSize
-			std::stringstream s1,s2,s3,s4,s,s5,s6,s7;
-			s1 << rotatedArea.cols;
-			s2 << rotatedArea.rows;
-			s3 << faceFinder.getMinFaceShortScan();
-			s4 << faceFinder.getMaxFaceShortScan();
-			s5 << x;
-			s6 << y;
-			s7 << width;
-
-			cv::imwrite("D:/A/video/wrong_face/" + s1.str() + "_" + s2.str() + "_" + s3.str() + "_" + s4.str() + "_" + s5.str() + "_" + s6.str() + "_" + s7.str() + ".bmp", rotatedArea);
-
-
 			return false;
 		}
 	}
@@ -281,38 +256,32 @@ double FaceFollower::getDegrees(float leftX, float leftY, float rightX, float ri
 //Calculate global coordinates based on rotation matrix and corner coordinates
 bool FaceFollower::calcGlobalCoordinates(cv::Mat &frame, float(&shape)[2][68], float(&globalShape)[2][68], cv::Point2f(&faceRectangle)[4], cv::Point2f(&faceGlobalRectangle)[4], cv::Point2f &coordinate, cv::Mat &affineMatrix)
 {
-	//First, we rotate coordinates
+	//Access to elements of a Mat is fastest by pointers
+	const double* ptr0 = affineMatrix.ptr<double>(0);
+	const double* ptr1 = affineMatrix.ptr<double>(1);
+
+	//Rotate and move coordinates
 	for (int i = 0; i < 4; i++)
 	{
-		faceGlobalRectangle[i].x = faceRectangle[i].x * affineMatrix.at<double>(0, 0) + faceRectangle[i].y * affineMatrix.at<double>(0, 1) + affineMatrix.at<double>(0, 2);
-		faceGlobalRectangle[i].y = faceRectangle[i].x * affineMatrix.at<double>(1, 0) + faceRectangle[i].y * affineMatrix.at<double>(1, 1) + affineMatrix.at<double>(1, 2);
-	}
-
-	for (int i = 0; i < 68; i++)
-	{
-		globalShape[0][i] = shape[0][i] * affineMatrix.at<double>(0, 0) + shape[1][i] * affineMatrix.at<double>(0, 1) + affineMatrix.at<double>(0, 2);
-		globalShape[1][i] = shape[0][i] * affineMatrix.at<double>(1, 0) + shape[1][i] * affineMatrix.at<double>(1, 1) + affineMatrix.at<double>(1, 2);
-	}
-
-	//Move coordinates
-	for (int i = 0; i < 4; i++)
-	{
+		faceGlobalRectangle[i].x = faceRectangle[i].x * ptr0[0] + faceRectangle[i].y * ptr0[1] + ptr0[2];
+		faceGlobalRectangle[i].y = faceRectangle[i].x * ptr1[0] + faceRectangle[i].y * ptr1[1] + ptr1[2];
 		faceGlobalRectangle[i].x = faceGlobalRectangle[i].x + coordinate.x;
 		faceGlobalRectangle[i].y = faceGlobalRectangle[i].y + coordinate.y;
 	}
 
 	for (int i = 0; i < 68; i++)
 	{
+		globalShape[0][i] = shape[0][i] * ptr0[0] + shape[1][i] * ptr0[1] + ptr0[2];
+		globalShape[1][i] = shape[0][i] * ptr1[0] + shape[1][i] * ptr1[1] + ptr1[2];
 		globalShape[0][i] = globalShape[0][i] + coordinate.x;
 		globalShape[1][i] = globalShape[1][i] + coordinate.y;
 	}
 
-
-	//We return fasle if the center of the face is not in the frame
+	//We return false if the center of the face is not in the frame
 	float centerX = (faceGlobalRectangle[0].x + faceGlobalRectangle[1].x + faceGlobalRectangle[2].x + faceGlobalRectangle[3].x) / 4.0;
 	float centerY = (faceGlobalRectangle[0].y + faceGlobalRectangle[1].y + faceGlobalRectangle[2].y + faceGlobalRectangle[3].y) / 4.0;
 
-	if (centerX < 0.0 || centerY < 0.0 || centerX >(float) frame.cols || centerY >(float) frame.rows)
+	if (centerX < 0.0 || centerY < 0.0 || centerX > (float) frame.cols || centerY > (float) frame.rows)
 	{
 		return false;
 	}

@@ -5,6 +5,7 @@ import android.opengl.GLES20;
 import android.util.Log;
 
 import ru.flightlabs.commonlib.R;
+import ru.flightlabs.masks.Static;
 import ru.flightlabs.masks.utils.FileUtils;
 import ru.flightlabs.masks.utils.PoseHelper;
 import ru.flightlabs.masks.utils.ShaderUtils;
@@ -27,7 +28,7 @@ public abstract class ShaderEffect {
         this.context = contex;
     }
     public void init() {
-        Log.i(TAG, "init");
+        if (Static.LOG_MODE) Log.i(TAG, "init");
         load3dModel();
         program2dJustCopy = ShaderUtils.createProgram(ShaderUtils.createShader(GLES20.GL_VERTEX_SHADER, FileUtils.getStringFromAsset(context.getAssets(), "shaders/vss_2d.glsl")), ShaderUtils.createShader(GLES20.GL_FRAGMENT_SHADER, FileUtils.getStringFromAsset(context.getAssets(), "shaders/fss_2d_simple.glsl")));
         program2dTriangles = ShaderUtils.createProgram(ShaderUtils.createShader(GLES20.GL_VERTEX_SHADER, FileUtils.getStringFromAsset(context.getAssets(), "shaders/vss_2d.glsl")), ShaderUtils.createShader(GLES20.GL_FRAGMENT_SHADER, FileUtils.getStringFromAsset(context.getAssets(), "shaders/fss_solid.glsl")));
@@ -39,10 +40,10 @@ public abstract class ShaderEffect {
     }
 
     private void load3dModel() {
-        Log.i(TAG, "load3dModel");
+        if (Static.LOG_MODE) Log.i(TAG, "load3dModel");
         model = new Model(R.raw.for_android_test,
                 context);
-        Log.i(TAG, "load3dModel exit");
+        if (Static.LOG_MODE) Log.i(TAG, "load3dModel exit");
     }
 
     public abstract void makeShaderMask(int indexEye, PoseHelper.PoseResult poseResult, int width, int height, int texIn, long time, int iGlobTime);

@@ -7,6 +7,8 @@ import android.util.Log;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import ru.flightlabs.masks.Static;
+
 /**
  * Created by sov on 10.12.2016.
  */
@@ -34,7 +36,7 @@ public class MyTestGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onDrawFrame(GL10 gl) {
-        Log.i(TAG, "onDrawFrame");
+        if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame");
         // Redraw background color
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
         gl.glLoadIdentity();
@@ -50,7 +52,7 @@ public class MyTestGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        Log.i(TAG, "onSurfaceChanged");
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceChanged");
         gl.glViewport(0, 0, width, height);
         gl.glMatrixMode(GL10.GL_PROJECTION);
         gl.glLoadIdentity();

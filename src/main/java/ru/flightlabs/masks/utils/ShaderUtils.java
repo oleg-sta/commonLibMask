@@ -8,6 +8,8 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.util.Log;
 
+import ru.flightlabs.masks.Static;
+
 import static android.opengl.GLES20.GL_COMPILE_STATUS;
 import static android.opengl.GLES20.GL_LINK_STATUS;
 import static android.opengl.GLES20.glAttachShader;
@@ -52,7 +54,7 @@ public class ShaderUtils {
     }
 
     public static int createShader(int type, String shaderText) {
-        Log.i("ShaderUtils", "createShader");
+        if (Static.LOG_MODE) Log.i("ShaderUtils", "createShader");
         final int shaderId = glCreateShader(type);
         if (shaderId == 0) {
             return 0;
@@ -62,7 +64,7 @@ public class ShaderUtils {
         final int[] compileStatus = new int[1];
         glGetShaderiv(shaderId, GL_COMPILE_STATUS, compileStatus, 0);
         if (compileStatus[0] == 0) {
-            Log.i("ShaderUtils", "error '"  + GLES20.glGetShaderInfoLog(shaderId) + "' compile shader " + shaderText);
+            if (Static.LOG_MODE) Log.i("ShaderUtils", "error '"  + GLES20.glGetShaderInfoLog(shaderId) + "' compile shader " + shaderText);
             glDeleteShader(shaderId);
             throw new RuntimeException("error while compile shader");
         }

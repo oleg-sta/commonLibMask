@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import ru.flightlabs.masks.Static;
 import ru.flightlabs.masks.renderer.MaskRenderer;
 
 /**
@@ -64,12 +65,12 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        Log.d(TAG, "surfaceCreated");
+        if (Static.LOG_MODE) Log.d(TAG, "surfaceCreated");
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        Log.d(TAG, "surfaceChanged " + format + " " + w + " " + h);
+        if (Static.LOG_MODE) Log.d(TAG, "surfaceChanged " + format + " " + w + " " + h);
         previewHeight = h;
         previewWidth = w;
         // TODO release camera if was
@@ -77,7 +78,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     }
 
     private void startCameraPreview(int previewWidthLocal, int previewHeightLocal) {
-        Log.d(TAG, "startCameraPreview " + previewWidthLocal + " " + previewHeightLocal + " " + cameraIndex);
+        if (Static.LOG_MODE) Log.d(TAG, "startCameraPreview " + previewWidthLocal + " " + previewHeightLocal + " " + cameraIndex);
         releaseCamera(); // easiest way TODO fix to right way
         mCamera = Camera.open(cameraIndex);
         // If your preview can change or rotate, take care of those events here.
@@ -97,7 +98,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
 
         // we transpose view
         Camera.Parameters params = mCamera.getParameters();
-        Log.d(TAG, "preview format " + params.getPreviewFormat());
+        if (Static.LOG_MODE) Log.d(TAG, "preview format " + params.getPreviewFormat());
         params.setPreviewFormat(ImageFormat.NV21);
         CameraHelper.calculateCameraPreviewSize(params, previewHeightLocal, previewWidthLocal);
         cameraWidth = params.getPreviewSize().width;
@@ -135,22 +136,22 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
                 mCamera.setPreviewDisplay(null);
 
             mCamera.startPreview();
-            Log.d(TAG, "Got a camera frame " + ImageFormat.getBitsPerPixel(params.getPreviewFormat()) + " " + params.getPreviewSize().height + " " + params.getPreviewSize().width);
+            if (Static.LOG_MODE) Log.d(TAG, "Got a camera frame " + ImageFormat.getBitsPerPixel(params.getPreviewFormat()) + " " + params.getPreviewSize().height + " " + params.getPreviewSize().width);
 
         } catch (Exception e){
-            Log.d(TAG, "Error starting camera preview: " + e.getMessage());
+            if (Static.LOG_MODE) Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-        Log.d(TAG, "surfaceDestroyed");
+        if (Static.LOG_MODE) Log.d(TAG, "surfaceDestroyed");
         releaseCamera();
     }
 
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
-        Log.d(TAG, "Got a camera frame " + data.length);
+        if (Static.LOG_MODE) Log.d(TAG, "Got a camera frame " + data.length);
         synchronized (frameCamera) {
             frameCamera.cameraWidth = cameraWidth;
             frameCamera.cameraHeight = cameraHeight;

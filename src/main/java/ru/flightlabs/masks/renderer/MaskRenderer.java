@@ -71,7 +71,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     PoseHelper poseHelper;
     ShaderEffect shaderHelper;
     public boolean staticView = false; // it means frame is fixed
-    PoseHelper.PoseResult poseResult;
+    public static PoseHelper.PoseResult poseResult;
 
     private static final String TAG = "MaskRenderer";
     public FrameCamera frameCamera;
@@ -83,10 +83,10 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        Log.i(TAG, "onSurfaceCreated");
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated");
         initShaders();
         GLES20.glGenTextures(2, texNV21FromCamera, 0);
-        Log.i(TAG, "onSurfaceCreated2 " + texNV21FromCamera[0]);
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated2 " + texNV21FromCamera[0]);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[0]);
         // FIXME use pixel to pixel, not average neighbours
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
@@ -94,7 +94,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
 
-        Log.i(TAG, "onSurfaceCreated2 " + texNV21FromCamera[1]);
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated2 " + texNV21FromCamera[1]);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texNV21FromCamera[1]);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
@@ -118,7 +118,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onDrawFrame(GL10 gl) {
-        Log.i(TAG, "onDrawFrame");
+        if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame");
         long time = System.currentTimeMillis();
         iGlobTime++;
         if (iGlobTime % 100 == 0) {
@@ -138,7 +138,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 facing1 = frameCamera.facing;
                 mCameraWidth = frameCamera.cameraWidth;
                 mCameraHeight = frameCamera.cameraHeight;
-                Log.i(TAG, "onDrawFrame size " + mCameraWidth + " " + mCameraHeight + " " + widthSurf + " " + heightSurf);
+                if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame size " + mCameraWidth + " " + mCameraHeight + " " + widthSurf + " " + heightSurf);
                 if (frameCamera.bufferFromCamera == null) return;
                 int cameraSize = mCameraWidth * mCameraHeight;
                 if (greyTemp == null) {
@@ -148,7 +148,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                     bufferY = ByteBuffer.allocateDirect(cameraSize);
                     bufferUV = ByteBuffer.allocateDirect(cameraSize / 2);
                 } else if (greyTemp.rows() != mCameraHeight || greyTemp.cols() != mCameraWidth) {
-                    Log.i(TAG, "onDrawFrame change size");
+                    if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame change size");
                     greyTemp.release();
                     grey.release();
                     mRgbaDummy.release();
@@ -171,7 +171,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_LUMINANCE_ALPHA, mCameraWidth / 2, (int) (mCameraHeight * 0.5), 0,
                         GLES20.GL_LUMINANCE_ALPHA, GLES20.GL_UNSIGNED_BYTE, bufferUV);
                 GLES20.glFlush();
-                Log.i(TAG, "onDrawFrame3");
+                if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame3");
             }
 
 
@@ -194,14 +194,14 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             GLES20.glEnableVertexAttribArray(vTex);
             int ufacing = GLES20.glGetUniformLocation(programNv21ToRgba, "u_facing");
             GLES20.glUniform1i(ufacing, facing1 ? 1 : 0);
-            Log.i(TAG, "onDrawFrame size22 " + 1f * widthSurf / heightSurf + " " + 1f * mCameraHeight / mCameraWidth);
+            if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame size22 " + 1f * widthSurf / heightSurf + " " + 1f * mCameraHeight / mCameraWidth);
             GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraWidth"), mCameraWidth);
             GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "cameraHeight"), mCameraHeight);
             GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "previewWidth"), widthSurf);
             GLES20.glUniform1f(GLES20.glGetUniformLocation(programNv21ToRgba, "previewHeight"), heightSurf);
-            Log.i(TAG, "onDrawFrame5");
+            if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame5");
             ShaderEffectHelper.shaderEffect2dWholeScreen(new Point(0, 0), new Point(widthSurf, heightSurf), texNV21FromCamera[0], programNv21ToRgba, vPos, vTex, texNV21FromCamera[1]);
-            Log.i(TAG, "onDrawFrame6");
+            if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame6");
 
             if (buffer22 == null) {
                 buffer22 = ByteBuffer.allocateDirect(widthSurf * heightSurf * 4);
@@ -262,7 +262,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                     GLES20.glEnableVertexAttribArray(vPos2);
                     ShaderEffectHelper.effect2dParticle(widthSurf, heightSurf, programId2dParticle, vPos2, projected2dpoints, new float[]{0, 0, 1});
 
-                    Log.i(TAG, "onDrawFrame size22 " + projected2dpoints.length);
+                    if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame size22 " + projected2dpoints.length);
                     vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
                     GLES20.glEnableVertexAttribArray(vPos2);
                     ShaderEffectHelper.effect2dLines(widthSurf, heightSurf, programId2dParticle, vPos2, PointsConverter.getLinesFromModel2(projected2dpoints, shaderHelper.model), new float[]{0, 0, 1});
@@ -306,9 +306,9 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        Log.i(TAG, "onSurfaceChanged " + width + " " + height);
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceChanged " + width + " " + height);
         GLES20.glGenTextures(1, texRgba, 0);
-        Log.i(TAG, "onSurfaceCreated3 " + texRgba[0]);
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated3 " + texRgba[0]);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texRgba[0]);
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
@@ -317,12 +317,12 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
 
         GLES20.glGenFramebuffers(1, fboRgba, 0);
-        Log.i(TAG, "onSurfaceCreated4 " + fboRgba[0]);
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated4 " + fboRgba[0]);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[0]);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, texRgba[0], 0);
 
-        Log.i(TAG, " fbo status " + GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER));
-        Log.i(TAG, "onSurfaceCreated5");
+        if (Static.LOG_MODE) Log.i(TAG, " fbo status " + GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER));
+        if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated5");
         poseHelper = new PoseHelper(compModel);
         poseHelper.init(context, width, height); // FIXME
 
