@@ -24,4 +24,5 @@ public class Settings {
     public static boolean addDebug;
     public static float min = 0.01f;
     public static boolean flagOrtho;
+    public static boolean superDebugMode;
 }

@@ -203,15 +203,17 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             ShaderEffectHelper.shaderEffect2dWholeScreen(new Point(0, 0), new Point(widthSurf, heightSurf), texNV21FromCamera[0], programNv21ToRgba, vPos, vTex, texNV21FromCamera[1]);
             if (Static.LOG_MODE) Log.i(TAG, "onDrawFrame6");
 
-            if (buffer22 == null) {
-                buffer22 = ByteBuffer.allocateDirect(widthSurf * heightSurf * 4);
-                buffer22.order(ByteOrder.LITTLE_ENDIAN);
+            if (Settings.superDebugMode) {
+                if (buffer22 == null) {
+                    buffer22 = ByteBuffer.allocateDirect(widthSurf * heightSurf * 4);
+                    buffer22.order(ByteOrder.LITTLE_ENDIAN);
+                }
+                GLES20.glReadPixels(0, 0, widthSurf, heightSurf, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer22);
+                buffer22.rewind();
+                mRgbaDummy.put(0, 0, buffer22.array());
+                //Core.transpose(mRgbaDummy, mRgbaDummy);
+                Core.flip(mRgbaDummy, mRgbaDummy, 0);
             }
-            GLES20.glReadPixels(0, 0, widthSurf, heightSurf, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer22);
-            buffer22.rewind();
-            mRgbaDummy.put(0, 0, buffer22.array());
-            //Core.transpose(mRgbaDummy, mRgbaDummy);
-            Core.flip(mRgbaDummy, mRgbaDummy, 0);
 
 
             if (!wereProcessed) {
@@ -220,15 +222,17 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 poseResult = poseHelper.findShapeAndPose(grey, mAbsoluteFaceSize, mRgbaDummy, widthSurf, heightSurf, shapeBlends, shaderHelper.model, context, mCameraHeight, mCameraWidth);
             }
 
-            // super debug ///////1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            Imgproc.line(mRgbaDummy, new Point(0, 0), new Point(100, 200), new Scalar(255, 0, 0), 3);
-            Core.flip(mRgbaDummy, mRgbaDummy, 0);
-            //Core.transpose(mRgbaDummy, mRgbaDummy);
-            buffer22.rewind();
-            mRgbaDummy.get(0, 0, buffer22.array());
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texRgba[0]);
-            GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, widthSurf, heightSurf, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer22);
-            ///////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (Settings.superDebugMode) {
+                // super debug ///////1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                Imgproc.line(mRgbaDummy, new Point(0, 0), new Point(100, 200), new Scalar(255, 0, 0), 3);
+                Core.flip(mRgbaDummy, mRgbaDummy, 0);
+                //Core.transpose(mRgbaDummy, mRgbaDummy);
+                buffer22.rewind();
+                mRgbaDummy.get(0, 0, buffer22.array());
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texRgba[0]);
+                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, widthSurf, heightSurf, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer22);
+                ///////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            }
 
             // TODO draw debug with shaders
             if (Settings.debugMode && poseResult.foundLandmarks != null && false) {
