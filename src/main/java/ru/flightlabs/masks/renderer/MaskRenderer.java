@@ -69,7 +69,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     PoseHelper poseHelper;
     ShaderEffect shaderHelper;
     public boolean staticView = false; // it means frame is fixed
-    PoseHelper.PoseResult poseResult;
+    public static PoseHelper.PoseResult poseResult;
 
     private static final String TAG = "MaskRenderer";
     public FrameCamera frameCamera;

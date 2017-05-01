@@ -18,10 +18,11 @@ public class DetectionBasedTracker
         mNativeObj = nativeCreateObject(cascadeName, minFaceSize);
         if (new File(modelSp).exists()) {
             Log.e("DetectionBasedTracker", "findLandMarks DetectionBasedTracker !" + modelSp);
-            long nat = nativeCreateModel(modelSp);
-            if (nat != 0) {
-                mNativeModel = nat;
-            }
+            // use trackface
+//            long nat = nativeCreateModel(modelSp);
+//            if (nat != 0) {
+//                mNativeModel = nat;
+//            }
         } else {
             Log.e("DetectionBasedTracker", "findLandMarks file doesn't exists !" + modelSp);
         }
@@ -50,7 +51,8 @@ public class DetectionBasedTracker
         nativeDestroyObject(mNativeObj);
         mNativeObj = 0;
     }
-    
+
+    @Deprecated
     public Point[] findLandMarks(Mat imageGray, Rect face) {
         if (mNativeModel != null) {
 //            return findLandMarks(mNativeObj, imageGray.getNativeObjAddr(), face.x, face.y, face.width, face.height, mNativeModel);
