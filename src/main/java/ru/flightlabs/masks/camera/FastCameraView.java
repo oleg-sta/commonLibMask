@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import ru.flightlabs.commonlib.Settings;
 import ru.flightlabs.masks.Static;
 import ru.flightlabs.masks.renderer.MaskRenderer;
 
@@ -136,7 +137,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
                 mCamera.setPreviewDisplay(null);
 
             mCamera.startPreview();
-            if (Static.LOG_MODE) Log.d(TAG, "Got a camera frame " + ImageFormat.getBitsPerPixel(params.getPreviewFormat()) + " " + params.getPreviewSize().height + " " + params.getPreviewSize().width);
+            if (Static.LOG_MODE) Log.d(TAG, "Got a camera frame " + params.getPreviewFormat() + " " + ImageFormat.getBitsPerPixel(params.getPreviewFormat()) + " " + params.getPreviewSize().height + " " + params.getPreviewSize().width);
 
         } catch (Exception e){
             if (Static.LOG_MODE) Log.d(TAG, "Error starting camera preview: " + e.getMessage());
@@ -153,15 +154,27 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (Static.LOG_MODE) Log.d(TAG, "Got a camera frame " + data.length);
         synchronized (frameCamera) {
-            frameCamera.cameraWidth = cameraWidth;
-            frameCamera.cameraHeight = cameraHeight;
-            frameCamera.facing = cameraFacing;
-            if (frameCamera.bufferFromCamera == null || frameCamera.bufferFromCamera.length != data.length) {
-                frameCamera.bufferFromCamera = new byte[data.length];
-            }
             // TODO find face and features here or another thread for optimization
             // TODO we can not copy buffer just find face features, morph face and let it go to renderer
-            System.arraycopy(data, 0, frameCamera.bufferFromCamera, 0, data.length);
+            if (!Settings.useFakeCamera || Settings.fakeCamera == null) {
+                frameCamera.cameraWidth = cameraWidth;
+                frameCamera.cameraHeight = cameraHeight;
+                frameCamera.facing = cameraFacing;
+                if (frameCamera.bufferFromCamera == null || frameCamera.bufferFromCamera.length != data.length) {
+                    frameCamera.bufferFromCamera = new byte[data.length];
+                }
+                System.arraycopy(data, 0, frameCamera.bufferFromCamera, 0, data.length);
+            } else {
+                synchronized (Settings.fakeCamera) {
+                    frameCamera.cameraWidth = Settings.fakeCamera.cameraWidth;
+                    frameCamera.cameraHeight = Settings.fakeCamera.cameraHeight;
+                    frameCamera.facing = Settings.fakeCamera.facing;
+                    if (frameCamera.bufferFromCamera == null || frameCamera.bufferFromCamera.length != Settings.fakeCamera.bufferFromCamera.length) {
+                        frameCamera.bufferFromCamera = new byte[Settings.fakeCamera.bufferFromCamera.length];
+                    }
+                    System.arraycopy(Settings.fakeCamera.bufferFromCamera, 0, frameCamera.bufferFromCamera, 0, Settings.fakeCamera.bufferFromCamera.length);
+                }
+            }
             frameCamera.wereProcessed = false;
         }
         // we should add buffer to queue, dut to buffer
