@@ -137,8 +137,7 @@ public class FastCameraView extends SurfaceView implements SurfaceHolder.Callbac
                 mCamera.setPreviewDisplay(null);
 
             mCamera.startPreview();
-            if (Static.LOG_MODE) Log.d(TAG, "Got a camera frame " + params.getPreviewFormat() + " " + ImageFormat.getBitsPerPixel(params.getPreviewFormat()) + " " + params.getPreviewSize().height + " " + params.getPreviewSize().width);
-
+            if (Static.LOG_MODE) Log.d(TAG, "Got a camera frame " + params.getPreviewFormat() + " " + ImageFormat.getBitsPerPixel(params.getPreviewFormat()) + " " + params.getPreviewSize().height + " " + params.getPreviewSize().width + " " + params.getPictureSize().height + " " + params.getPictureSize().width);
         } catch (Exception e){
             if (Static.LOG_MODE) Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }

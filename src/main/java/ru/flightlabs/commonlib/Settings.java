@@ -29,4 +29,5 @@ public class Settings {
     public static boolean superDebugMode;
     public static boolean useFakeCamera;
     public static FrameCamera fakeCamera;
+    public static ErrorInterface errorClass;
 }
