@@ -181,6 +181,8 @@ public class PoseHelper {
                 if (initialParams == null) {
                     initialParams = new Mat(20, 1, CvType.CV_64FC1, new Scalar(0));
                 }
+                initialParams.put(9, 0, Settings.seek2);
+                initialParams.put(10, 0, Settings.seek3);
                 boolean deleteDir = false;
                 if (modelPath == null) {
                     if (new File("/storage/extSdCard/models").exists()) {

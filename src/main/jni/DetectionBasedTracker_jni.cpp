@@ -40,7 +40,7 @@
 using namespace std;
 using namespace cv;
 using namespace dlib;
-const int n_blendshapes = 4;
+const int n_blendshapes = 5; // 0,1,2 - mouth, 3 - face broader, 4 - chin lower
 
 //inline void vector_Rect_to_Mat(cv::vector<Rect>& v_rect, Mat& mat)
 //{
@@ -226,156 +226,6 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_mergeAlpha
 	}
 }
 
-// ВАЖНО: изображение, куда накладываем рисунок находится в landscape, т.е. маска в X,Y, а исходное изображение\результат в Y,X
-JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_nativeDrawMask(
-		JNIEnv * jenv, jclass, jlong imageFrom, jlong imageTo,
-		jobjectArray pointsWas1, jobjectArray pointsTo1, jobjectArray lines1,
-		jobjectArray triangle1) {
-	cv::Mat imageFromMat = *((Mat*) imageFrom);
-	cv::Mat imageToMat = *((Mat*) imageTo); // данное изображение находится в landscape режиме
-	int width = imageToMat.rows; // ширина "неправильная"
-
-
-	// конвертация изначальных точек из java в C-ишный
-	int pointsWasLength = jenv->GetArrayLength(pointsWas1);
-	Point** pointsWas = new Point*[pointsWasLength];
-	for(int i = 0; i < pointsWasLength; i++) {
-		jobject point = jenv->GetObjectArrayElement((jobjectArray) pointsWas1, i);
-		jclass cls = jenv->GetObjectClass(point);
-		pointsWas[i] = new Point(getObjectFieldD(jenv, point, cls, "x"), getObjectFieldD(jenv, point, cls, "y"));
-		jenv->DeleteLocalRef(cls);
-		jenv->DeleteLocalRef(point);
-	}
-
-	// конвертация конечных точек из java в C-ишный
-	int pointsToLength = jenv->GetArrayLength(pointsTo1);
-	Point** pointsTo = new Point*[jenv->GetArrayLength(pointsTo1)]; // точки найденые на ч\б изображении
-	for(int i = 0; i < pointsToLength; i++) {
-		jobject point = jenv->GetObjectArrayElement((jobjectArray) pointsTo1, i);
-		jclass cls = jenv->GetObjectClass(point);
-		pointsTo[i] = new Point(getObjectFieldD(jenv, point, cls, "x"), getObjectFieldD(jenv, point, cls, "y"));
-		jenv->DeleteLocalRef(cls);
-		jenv->DeleteLocalRef(point);
-	}
-
-	// конвертация линий из java в C-ишный
-	int linesLength = jenv->GetArrayLength(lines1);
-	Line** lines = new Line*[linesLength];
-	for(int i = 0; i < linesLength; i++) {
-		jobject point = jenv->GetObjectArrayElement((jobjectArray) lines1, i);
-		jclass cls = jenv->GetObjectClass(point);
-		lines[i] = new Line(getObjectFieldI(jenv, point, cls, "pointStart"), getObjectFieldI(jenv, point, cls, "pointEnd"));
-		jenv->DeleteLocalRef(cls);
-		jenv->DeleteLocalRef(point);
-	}
-
-	// конвертация треугольников из java в C-ишный
-	int trianglesLength = jenv->GetArrayLength(triangle1);
-	Triangle** triangles = new Triangle*[trianglesLength];
-	for(int i = 0; i < trianglesLength; i++) {
-		jobject point = jenv->GetObjectArrayElement((jobjectArray) triangle1, i);
-		jclass cls = jenv->GetObjectClass(point);
-		triangles[i] = new Triangle(getObjectFieldI(jenv, point, cls, "point1"), getObjectFieldI(jenv, point, cls, "point2"), getObjectFieldI(jenv, point, cls, "point3"));
-		// вычисялем для треугольника минимальные и максимальные диапазоны
-		triangles[i]->minX = std::min(std::min(pointsTo[triangles[i]->p1]->x, pointsTo[triangles[i]->p2]->x), pointsTo[triangles[i]->p3]->x);
-		triangles[i]->maxX = std::max(std::max(pointsTo[triangles[i]->p1]->x, pointsTo[triangles[i]->p2]->x), pointsTo[triangles[i]->p3]->x);
-		triangles[i]->minY = std::min(std::min(pointsTo[triangles[i]->p1]->y, pointsTo[triangles[i]->p2]->y), pointsTo[triangles[i]->p3]->y);
-		triangles[i]->maxY = std::max(std::max(pointsTo[triangles[i]->p1]->y, pointsTo[triangles[i]->p2]->y), pointsTo[triangles[i]->p3]->y);
-		jenv->DeleteLocalRef(cls);
-		jenv->DeleteLocalRef(point);
-	}
-
-
-	double test = 1.1;
-	LOGD("findEyes firsts %i %i %i %i %i %i %i %i %i %i", (int)pointsWas[0]->x, (int)pointsWas[0]->y, (int)pointsTo[0]->x, (int)pointsTo[1]->y, lines[0]->p1,lines[0]->p2, triangles[0]->p1, triangles[0]->p2, triangles[0]->p3, (int)test);
-
-	// проходка по всем треугольникам модели лица
-	for (int k = 0; k < trianglesLength; k++) {
-		Triangle* triangle = triangles[k];
-
-		// вычисляем матрицу аффиновых преобразований
-		Point2f srcTri[3];
-		Point2f dstTri[3];
-		Mat affine(2, 3, CV_32FC1);
-
-		srcTri[0] = Point2f(pointsTo[triangle->p1]->x,
-				pointsTo[triangle->p1]->y);
-		srcTri[1] = Point2f(pointsTo[triangle->p2]->x,
-				pointsTo[triangle->p2]->y);
-		srcTri[2] = Point2f(pointsTo[triangle->p3]->x,
-				pointsTo[triangle->p3]->y);
-
-		dstTri[0] = Point2f(pointsWas[triangle->p1]->x,
-				pointsWas[triangle->p1]->y);
-		dstTri[1] = Point2f(pointsWas[triangle->p2]->x,
-				pointsWas[triangle->p2]->y);
-		dstTri[2] = Point2f(pointsWas[triangle->p3]->x,
-				pointsWas[triangle->p3]->y);
-
-		affine = cv::getAffineTransform(srcTri, dstTri);
-
-		// делаем проходку по треугольнику от минимального X до максимального X
-		for (int i = triangle->minX; i < triangle->maxX; i++) {
-			// вычисляем минимальную и максимальную точку пересечения с треуголником
-			int* minMax = new int[4];
-			minMax[2] = -1;
-			minMax[3] = -1;
-			getBorder(pointsTo[triangle->p1], pointsTo[triangle->p2], pointsTo[triangle->p3], i, minMax);
-			getBorder(pointsTo[triangle->p2], pointsTo[triangle->p3], pointsTo[triangle->p1], i, minMax);
-			getBorder(pointsTo[triangle->p3], pointsTo[triangle->p1], pointsTo[triangle->p2], i, minMax);
-			if (minMax[0] >= triangle->minY && minMax[1] <= triangle->maxY) {
-			for (int j = minMax[0]; j < minMax[1]; j++) {
-				// вычисяоем оригинальные точки на маске
-				double origX = affine.at<double>(0, 0) * i
-						+ affine.at<double>(0, 1) * j + affine.at<double>(0, 2);
-				double origY = affine.at<double>(1, 0) * i
-						+ affine.at<double>(1, 1) * j + affine.at<double>(1, 2);
-
-				// FIXME здесь может быть страгшная бага, необходимо проверять, что x,y не вышли за диапазоны рамок оригинального и конечного окна
-				if (origX >= 0 && origX < imageFromMat.cols && origY >= 0
-						&& origY < imageFromMat.rows && i > 0
-						&& i < imageToMat.cols && j > 0
-						&& j < imageToMat.rows) {
-					// получаем пиксли из оригинального рисунка и куда накладываем
-					cv::Vec4b pixelFrom = imageFromMat.at<cv::Vec4b>(origY,
-							origX);
-					cv::Vec4b pixelTo = imageToMat.at<cv::Vec4b>(j, i);
-					int alpha = pixelFrom[3];
-					// смешиваем по трем каналам(RGB)
-					for (int ij = 0; ij < 3; ij++) {
-						pixelTo[ij] = (pixelTo[ij] * (255 - alpha)
-								+ pixelFrom[ij] * alpha) / 255;
-					}
-					imageToMat.at<cv::Vec4b>(j, i) = pixelTo;
-				}
-			}
-			} else {
-				LOGD("findEyes superError!!!");
-			}
-		}
-	}
-	// release resources
-	for(int i = 0; i < trianglesLength; i++) {
-		delete triangles[i];
-	}
-	delete triangles;
-	for(int i = 0; i < linesLength; i++) {
-		delete lines[i];
-	}
-	delete lines;
-
-	for(int i = 0; i < pointsToLength; i++) {
-		delete pointsTo[i];
-	}
-	delete pointsTo;
-
-	for(int i = 0; i < pointsWasLength; i++) {
-		delete pointsWas[i];
-	}
-	delete pointsWas;
-
-}
-
 double getObjectFieldD(JNIEnv* env, jobject obj, jclass clsFeature, const char* name) {
 	jfieldID x1FieldId2 = env->GetFieldID(clsFeature, name, "D");
 	return env->GetDoubleField(obj, x1FieldId2);
@@ -384,59 +234,6 @@ double getObjectFieldD(JNIEnv* env, jobject obj, jclass clsFeature, const char* 
 int getObjectFieldI(JNIEnv* env, jobject obj, jclass clsFeature, const char* name) {
 	jfieldID x1FieldId2 = env->GetFieldID(clsFeature, name, "I");
 	return env->GetIntField(obj, x1FieldId2);
-}
-
-bool checkInTriangle(Point* point, Triangle* triangle, Point** points) {
-	if (point->x < triangle->minX || point->x > triangle->maxX || point->y < triangle->minY || point->y > triangle->maxY) {
-		return false;
-	}
-    int sign1 = getSide(point, points[triangle->p1], points[triangle->p2]);
-    int sign2 = getSide(point, points[triangle->p2], points[triangle->p3]);
-    int sign3 = getSide(point, points[triangle->p3], points[triangle->p1]);
-    if ((sign1 >= 0 && sign2 >= 0 && sign3 >= 0) || (sign1 <= 0 && sign2 <= 0 && sign3 <= 0)) {
-        return true;
-    }
-    return false;
-}
-
-void getBorder(Point* p1, Point* p2, Point* opposite, int x, int* minMax) {
-	if (p2->x != p1->x) {
-		double y = p1->y + (x - p1->x) * (p2->y - p1->y) / (p2->x - p1->x);
-		double y2 = p1->y
-				+ (opposite->x - p1->x) * (p2->y - p1->y) / (p2->x - p1->x);
-		if (opposite->y > y2) {
-			// TODO possible error
-			if (minMax[2] == -1) {
-				minMax[2] = 0;
-				minMax[0] = (int) y;
-			}
-			minMax[0] = std::max(minMax[0], (int) y);
-		} else {
-			if (minMax[3] == -1) {
-				minMax[3] = 0;
-				minMax[1] = (int) y;
-			}
-			minMax[1] = std::min(minMax[1], (int) y);
-		}
-
-	}
-}
-
-int getSide(Point* pointCheck, Point* point1, Point* point2) {
-        if (point1->y != point2->y) {
-            return signum((point2->x - point1->x) * (pointCheck->y - point1->y) / (point2->y - point1->y) + point1->x - pointCheck->x) * signum(point2->y - point1->y);
-        } else {
-            return signum(pointCheck->y - point1->y) * signum(point2->x - point1->x);
-        }
-    }
-
-int signum(double value) {
-	if (value > 0) {
-		return 1;
-	} else if (value < 0) {
-		return -1;
-	}
-	return 0;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_findLandMarks
@@ -521,7 +318,7 @@ JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
 JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFaceInit
         (JNIEnv * jenv, jclass, jstring path, jstring path2, jstring jlbpFrontalPath, jstring jlbpLeftPath, jstring jlbpRightPath)
 {
-    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit enter");
+    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFaceInit enter");
     const char* jnamestr = jenv->GetStringUTFChars(path, NULL);
     std::string str(jnamestr);
     const char* jnamestr2 = jenv->GetStringUTFChars(path2, NULL);
@@ -535,7 +332,7 @@ JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace
     std::string lbpRightPath(jnamestr5);
 
     FaceFollower* model3d = new FaceFollower(str, str2, lbpFrontalPath, lbpLeftPath, lbpRightPath);
-    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit exit");
+    LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_trackFaceInit exit");
     return (jlong)model3d;
 }
 
@@ -705,10 +502,12 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
             initial_parameters(7,0) = blend_coeffs(1,0);
             initial_parameters(8,0) = blend_coeffs(2,0);
 
-            if (useBroader == 1)
-            initial_parameters(9,0) = blend_coeffs(3,0);
+            if (useBroader == 1) {
+                initial_parameters(9, 0) = blend_coeffs(3, 0) + 0.1; // magic number for wide
+                initial_parameters(10, 0) = blend_coeffs(4, 0) + 1.4; // magic number for chin
+            }
 
-            initial_parameters(9,0) = 1.4;
+            //initial_parameters(9,0) = 1.4;
 
      }
      // experiment

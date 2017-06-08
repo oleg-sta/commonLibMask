@@ -2,11 +2,15 @@ package ru.flightlabs.masks.renderer;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.m4m.IProgressListener;
+import org.m4m.StreamingParameters;
+import org.m4m.samples.VideoCapture;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -15,6 +19,7 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -43,6 +48,10 @@ import ru.flightlabs.masks.utils.ShaderUtils;
 
 public class MaskRenderer implements GLSurfaceView.Renderer {
 
+    public static int VIDEO_HEIGHT = 480;
+    public static int VIDEO_WIDTH = 360;
+
+    public VideoCapture videoCapture;
     int widthSurf;
     int heightSurf;
 
@@ -56,8 +65,8 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
     int program2dTriangles;
     int program2dJustCopy;
 
-    int texRgba[] = new int[1];
-    int fboRgba[] = new int[1];
+    int texRgba[] = new int[2];
+    int fboRgba[] = new int[2];
 
     ByteBuffer bufferY;
     ByteBuffer bufferUV;
@@ -75,6 +84,33 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
     private static final String TAG = "MaskRenderer";
     public FrameCamera frameCamera;
+
+    public IProgressListener progressListener = new IProgressListener() {
+        @Override
+        public void onMediaStart() {
+        }
+
+        @Override
+        public void onMediaProgress(float progress) {
+        }
+
+        @Override
+        public void onMediaDone() {
+        }
+
+        @Override
+        public void onMediaPause() {
+        }
+
+        @Override
+        public void onMediaStop() {
+        }
+
+        @Override
+        public void onError(Exception exception) {
+            if (Static.LOG_MODE) Log.i(TAG, "onError progressListener " + exception.getMessage());
+        }
+    };
 
     public MaskRenderer(Activity context, CompModel compModel, ShaderEffect shaderHelper) {
         this.context = context;
@@ -235,7 +271,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             }
 
             // TODO draw debug with shaders
-            if (Settings.debugMode && poseResult.foundLandmarks != null && false) {
+            if (Settings.debugMode && poseResult.foundLandmarks != null) {
                 int vPos2 = GLES20.glGetAttribLocation(programId2dParticle, "vPosition");
                 GLES20.glEnableVertexAttribArray(vPos2);
                 ShaderEffectHelper.effect2dParticle(widthSurf, heightSurf, programId2dParticle, vPos2, PointsConverter.convertFromPointsGlCoord(poseResult.foundLandmarks, widthSurf, heightSurf), new float[]{1,1,1});
@@ -274,10 +310,21 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
             }
             // draw effect on rgba
-            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+            //GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[1]);
             GLES20.glViewport(0, 0, widthSurf, heightSurf);
             shaderHelper.makeShaderMask(Static.newIndexEye, poseResult, widthSurf, heightSurf, texRgba[0], time, iGlobTime);
 
+            // copy from middle buffer
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+            GLES20.glViewport(0, 0, widthSurf, heightSurf);
+            vPos = GLES20.glGetAttribLocation(program2dJustCopy, "vPosition");
+            vTex = GLES20.glGetAttribLocation(program2dJustCopy, "vTexCoord");
+            GLES20.glEnableVertexAttribArray(vPos);
+            GLES20.glEnableVertexAttribArray(vTex);
+            ShaderEffectHelper.shaderEffect2dWholeScreen(poseResult.leftEye, poseResult.rightEye, texRgba[1], program2dJustCopy, vPos, vTex);
+
+            if (Static.LOG_MODE) Log.i(TAG, "check for make photo");
             if (Static.makePhoto) {
                 Static.makePhoto = false;
                 ByteBuffer m_bbPixels = ByteBuffer.wrap(new byte[widthSurf * heightSurf * 4]);
@@ -307,11 +354,39 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             }
         }
 
+        if (Static.LOG_MODE) Log.i(TAG, "sync for video");
+        if (Static.LOG_MODE) Log.i(TAG, "enter sync for video");
+        synchronized (videoCapture) {
+            if (videoCapture.isStarted()) {
+                if (Static.LOG_MODE) Log.i(TAG, "isStarted1111");
+                if (videoCapture.beginCaptureFrame()) {
+                    Log.i(TAG, "videoCapture1");
+                    GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+                    GLES20.glViewport(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+
+                    int vPos = GLES20.glGetAttribLocation(program2dJustCopy, "vPosition");
+                    int vTex = GLES20.glGetAttribLocation(program2dJustCopy, "vTexCoord");
+                    GLES20.glEnableVertexAttribArray(vPos);
+                    GLES20.glEnableVertexAttribArray(vTex);
+                    Log.i(TAG, "videoCapture2");
+                    ShaderEffectHelper.shaderEffect2dWholeScreen(poseResult.leftEye, poseResult.rightEye, texRgba[1], program2dJustCopy, vPos, vTex);
+                    Log.i(TAG, "videoCapture3");
+                    videoCapture.endCaptureFrame();
+                }
+            }
+        }
+
     }
 
     public void onSurfaceChanged(GL10 gl, int width, int height) {
+        VIDEO_HEIGHT = (height / 2) * 2;
+        VIDEO_WIDTH = (width / 2) * 2;
+
+//        videoCapture = new VideoCapture(context.getApplicationContext(), progressListener, height, width);
+        videoCapture = new VideoCapture(context.getApplicationContext(), progressListener, VIDEO_WIDTH, VIDEO_HEIGHT);
         if (Static.LOG_MODE) Log.i(TAG, "onSurfaceChanged " + width + " " + height);
-        GLES20.glGenTextures(1, texRgba, 0);
+        GLES20.glGenTextures(2, texRgba, 0);
         if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated3 " + texRgba[0]);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texRgba[0]);
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
@@ -320,10 +395,23 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
 
-        GLES20.glGenFramebuffers(1, fboRgba, 0);
+        GLES20.glGenFramebuffers(2, fboRgba, 0);
         if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated4 " + fboRgba[0]);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[0]);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, texRgba[0], 0);
+
+
+        // second frame buffer and texture
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texRgba[1]);
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[1]);
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, texRgba[1], 0);
+
+
 
         if (Static.LOG_MODE) Log.i(TAG, " fbo status " + GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER));
         if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated5");
@@ -332,5 +420,38 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
         this.widthSurf = width;
         this.heightSurf = height;
+    }
+
+    public void startCapturing(StreamingParameters params) throws IOException {
+        if (videoCapture == null) {
+            return;
+        }
+        synchronized (videoCapture) {
+            videoCapture.start(params);
+        }
+    }
+
+    public void startCapturing(String videoPath) throws IOException {
+        if (videoCapture == null) {
+            return;
+        }
+        synchronized (videoCapture) {
+            videoCapture.start(videoPath);
+        }
+    }
+
+    public void stopCapturing() {
+        if (videoCapture == null) {
+            return;
+        }
+        synchronized (videoCapture) {
+            if (videoCapture.isStarted()) {
+                videoCapture.stop();
+            }
+        }
+    }
+
+    public boolean isCapturingStarted() {
+        return videoCapture.isStarted();
     }
 }

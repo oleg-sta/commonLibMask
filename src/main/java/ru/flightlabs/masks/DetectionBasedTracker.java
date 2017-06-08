@@ -66,11 +66,6 @@ public class DetectionBasedTracker
         mergeAlpha(fromImage.getNativeObjAddr(), toImage.getNativeObjAddr());
     }
     
-    public void drawMask(Mat currentMaskLandScaped, Mat mRgba, ru.flightlabs.masks.model.primitives.Point[] pointsWas, Point[] foundEyes, Line[] lines, Triangle[] trianlges) {
-        nativeDrawMask(currentMaskLandScaped.getNativeObjAddr(), mRgba.getNativeObjAddr(), pointsWas,
-                foundEyes, lines, trianlges);
-    }
-
     public void morhpFace(Mat input2dShape, Mat output3dShape, Mat jmatrixinitial, String modelpath, boolean flag, boolean useLinear, boolean useBroader, Mat projectedModel) {
         if (mNative3d == 0) {
             mNative3d = morhpFaceInit(modelpath);
@@ -101,8 +96,6 @@ public class DetectionBasedTracker
     private static native void nativeDetect(long thiz, long inputImage, long faces);
     private static native Point[] findLandMarks(long thiz, long inputImage, int x, int y, int height, int width, long modelSp);
     private static native void mergeAlpha(long fromImage, long toImage);
-    private static native void nativeDrawMask(long maskImage, long toImage, ru.flightlabs.masks.model.primitives.Point[] pointsWas,
-            Point[] foundEyes, Line[] lines, Triangle[] trianlges);
 
     private static native void morhpFace(long jmatrix2dLands, long jmatrix3dFace, long jmatrixinitial, long modelpath, int flag, int useLinear, int useBrodader, long projected3d);
     private static native long morhpFaceInit(String modelpath);

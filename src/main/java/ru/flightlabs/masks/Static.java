@@ -27,4 +27,5 @@ public class Static {
     public static Mat glViewMatrix2;
 
     public static final int[] resourceDetector = {R.raw.haarcascade_frontalface_alt2_snap, R.raw.lbpcascade_frontalface, R.raw.haarcascade_frontalface_alt2, R.raw.my_detector};
+    public static boolean saveVideo;
 }

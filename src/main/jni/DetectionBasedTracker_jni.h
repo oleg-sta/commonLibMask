@@ -75,10 +75,6 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_nativeStop
 JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_nativeDetect
   (JNIEnv *, jclass, jlong, jlong, jlong);
 
-// drawing 2d mask by opencv, very slow
-JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_nativeDrawMask
-(JNIEnv * jenv, jclass, jlong imageFrom, jlong imageTo, jobjectArray, jobjectArray, jobjectArray, jobjectArray);
-
 JNIEXPORT jlong JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFaceInit
 (JNIEnv * jenv, jclass, jstring path);
 
