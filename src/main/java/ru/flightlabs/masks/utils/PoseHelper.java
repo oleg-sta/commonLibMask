@@ -67,7 +67,15 @@ public class PoseHelper {
 
     public void init(Context context, int width, int height) {
         if (Static.LOG_MODE) Log.i(TAG, "init");
-        intrinsics = Mat.eye(3, 3, CvType.CV_64F);
+        // very very temp for error catch
+        try {
+            intrinsics = Mat.eye(3, 3, CvType.CV_64F);
+        } catch (UnsatisfiedLinkError e) {
+            if (Settings.errorClass != null) {
+                Settings.errorClass.sendError(e);
+            }
+            throw e;
+        }
         int wiid = width < height? width : height;
         wiiid = wiid;
         //int wiid = width < height? height : width;
@@ -119,7 +127,6 @@ public class PoseHelper {
     // also this method midifies model to blend
     public PoseResult findShapeAndPose(Mat findGray, int mAbsoluteFaceSize, Mat mRgba, int width, int height, boolean shapeBlends, Model model, Context context, int mCameraWidth, int mCameraHeight) {
 //        MatOfRect faces = compModel.findFaces(findGray, mAbsoluteFaceSize);
-        shapeBlends = true;
         DetectionBasedTracker mNativeDetector = compModel.mNativeDetector;
 
 

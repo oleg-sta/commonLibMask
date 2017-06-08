@@ -1,11 +1,13 @@
 package ru.flightlabs.commonlib;
 
+import ru.flightlabs.masks.camera.FrameCamera;
+
 public class Settings {
 
     public static String PHOTO = "photo";
 
     public static boolean debugMode = false;
-    public static final String DIRECTORY_SELFIE = "Masks"; // dir and prefix name
+    public static String DIRECTORY_SELFIE = "Masks"; // dir and prefix name
     
     public static final String PREFS = "eselfie";
     public static final String DEBUG_MODE = "debugMode";
@@ -28,4 +30,8 @@ public class Settings {
     public static boolean superDebugMode;
     public static float seek3;
     public static float seek2;
+
+    public static boolean useFakeCamera;
+    public static FrameCamera fakeCamera;
+    public static ErrorInterface errorClass;
 }
