@@ -182,7 +182,7 @@ public class PoseHelper {
 
         Mat projected = new Mat(113, 3, CvType.CV_64FC1);
         if (foundLandmarks != null) {
-            if (shapeBlends) {
+            if (shapeBlends || true) {
                 Mat inputLandMarks = PointsConverter.points2dToMat(foundLandmarks);//new Mat(68, 2, CvType.CV_64FC1);
                 Mat output3dShape = new Mat(113, 3, CvType.CV_64FC1);
                 if (initialParams == null) {
@@ -204,7 +204,7 @@ public class PoseHelper {
                     }
                     if (Static.LOG_MODE) Log.i(TAG, "onCameraTexture1 " + modelPath);
                 }
-                mNativeDetector.morhpFace(inputLandMarks, output3dShape, initialParams, modelPath, true, Settings.useLinear, Settings.useBroader, projected);
+                mNativeDetector.morhpFace(inputLandMarks, output3dShape, initialParams, modelPath, true, Settings.useLinear, Settings.useBroader, projected, shapeBlends);
                 if (deleteDir) {
                     deleteRecursive(new File(modelPath));
                 }

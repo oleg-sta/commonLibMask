@@ -86,7 +86,7 @@ JNIEXPORT jint JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace
 
 // morph face by blendshapes
 JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
-(JNIEnv * jenv, jclass, jlong, jlong, jlong, jlong, jint, jint, jint, jlong);
+(JNIEnv * jenv, jclass, jlong, jlong, jlong, jlong, jint, jint, jint, jlong, jint);
 
 void findLandMarks(cv::Mat frame_gray, cv::Rect face, std::vector<cv::Point> &pixels,  ModelClass *modelClass);
 bool checkInTriangle(cv::Point*, Triangle* triangle, cv::Point**);

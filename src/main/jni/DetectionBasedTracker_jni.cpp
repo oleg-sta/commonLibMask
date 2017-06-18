@@ -380,7 +380,7 @@ JNIEXPORT jint JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_trackFace
 }
 
 JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
-(JNIEnv * jenv, jclass, jlong jmatrix2dLands, jlong jmatrix3dFace, jlong jinitialParams, jlong model3dL, jint flag, jint juseLinear, jint useBroader, jlong jmatrix3dOrtho)
+(JNIEnv * jenv, jclass, jlong jmatrix2dLands, jlong jmatrix3dFace, jlong jinitialParams, jlong model3dL, jint flag, jint juseLinear, jint useBroader, jlong jmatrix3dOrtho, jint useBlends)
 {
     LOGD("Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace enter");
     LOGD("morhpFace3 %i", juseLinear );
@@ -477,10 +477,6 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
     	    }
     	    resOrtho = eos::fitting::estimate_orthographic_projection_linear(yy2d, xx3d);
 
-    	    blend_coeffs = find_coeffs_linear(resOrtho, yy2d, xx, model3d.get_blendshapes());
-    	    LOGD("morhpFace9 %i %i %i %i", blend_coeffs.nc(), blend_coeffs.nr(), initial_parameters.nc(), initial_parameters.nr());
-
-
     	    //current_3dshape = projection_model.convert_mean_shape(blend_coeffs,xx,model3d.get_blendshapes());
 
 
@@ -495,17 +491,22 @@ JNIEXPORT void JNICALL Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace
     	    initial_parameters(4,0) = resOrtho.tx;
     	    initial_parameters(5,0) = resOrtho.ty;
 
+         // do we need to use blendshapes?
+         if (useBlends == 1) {
+             blend_coeffs = find_coeffs_linear(resOrtho, yy2d, xx, model3d.get_blendshapes());
+             LOGD("morhpFace9 %i %i %i %i", blend_coeffs.nc(), blend_coeffs.nr(),
+                  initial_parameters.nc(), initial_parameters.nr());
+             //set_subm(initial_parameters,0,0,n_transformation_parameters,1) = initial_parameters_tr;
+             //set_subm(initial_parameters,n_transformation_parameters+1,0,n_blendshapes_parameters,1) = blend_coeffs;
+             initial_parameters(6, 0) = blend_coeffs(0, 0);
+             initial_parameters(7, 0) = blend_coeffs(1, 0);
+             initial_parameters(8, 0) = blend_coeffs(2, 0);
 
-    	    //set_subm(initial_parameters,0,0,n_transformation_parameters,1) = initial_parameters_tr;
-            //set_subm(initial_parameters,n_transformation_parameters+1,0,n_blendshapes_parameters,1) = blend_coeffs;
-            initial_parameters(6,0) = blend_coeffs(0,0);
-            initial_parameters(7,0) = blend_coeffs(1,0);
-            initial_parameters(8,0) = blend_coeffs(2,0);
-
-            if (useBroader == 1) {
-                initial_parameters(9, 0) = blend_coeffs(3, 0) + 0.1; // magic number for wide
-                initial_parameters(10, 0) = blend_coeffs(4, 0) + 1.4; // magic number for chin
-            }
+             if (useBroader == 1) {
+                 initial_parameters(9, 0) = blend_coeffs(3, 0) + 0.1; // magic number for wide
+                 initial_parameters(10, 0) = blend_coeffs(4, 0) + 1.4; // magic number for chin
+             }
+         }
 
             //initial_parameters(9,0) = 1.4;
 

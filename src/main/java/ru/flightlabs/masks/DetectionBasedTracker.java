@@ -66,11 +66,11 @@ public class DetectionBasedTracker
         mergeAlpha(fromImage.getNativeObjAddr(), toImage.getNativeObjAddr());
     }
     
-    public void morhpFace(Mat input2dShape, Mat output3dShape, Mat jmatrixinitial, String modelpath, boolean flag, boolean useLinear, boolean useBroader, Mat projectedModel) {
+    public void morhpFace(Mat input2dShape, Mat output3dShape, Mat jmatrixinitial, String modelpath, boolean flag, boolean useLinear, boolean useBroader, Mat projectedModel, boolean useBlends) {
         if (mNative3d == 0) {
             mNative3d = morhpFaceInit(modelpath);
         }
-        morhpFace(input2dShape.getNativeObjAddr(), output3dShape.getNativeObjAddr(), jmatrixinitial.getNativeObjAddr(), mNative3d, flag? 1 : 0, useLinear? 1 : 0, useBroader? 1 : 0, projectedModel.getNativeObjAddr());
+        morhpFace(input2dShape.getNativeObjAddr(), output3dShape.getNativeObjAddr(), jmatrixinitial.getNativeObjAddr(), mNative3d, flag? 1 : 0, useLinear? 1 : 0, useBroader? 1 : 0, projectedModel.getNativeObjAddr(), useBlends? 1 : 0);
     }
 
     @Deprecated
@@ -97,7 +97,7 @@ public class DetectionBasedTracker
     private static native Point[] findLandMarks(long thiz, long inputImage, int x, int y, int height, int width, long modelSp);
     private static native void mergeAlpha(long fromImage, long toImage);
 
-    private static native void morhpFace(long jmatrix2dLands, long jmatrix3dFace, long jmatrixinitial, long modelpath, int flag, int useLinear, int useBrodader, long projected3d);
+    private static native void morhpFace(long jmatrix2dLands, long jmatrix3dFace, long jmatrixinitial, long modelpath, int flag, int useLinear, int useBrodader, long projected3d, int useBlends);
     private static native long morhpFaceInit(String modelpath);
 
     private static native long trackFaceInit(String str, String str2, String lbpFrontalPath, String lbpLeftPath, String lbpRightPath);

@@ -322,4 +322,44 @@ public class ShaderEffectHelper {
         GLES20.glFlush(); //?
         //GLES20.glFinish();
     }
+
+    public static void shaderEffect2dWholeScreen(PoseHelper.PoseResult poseResult, int texIn, int programId, int poss, int texx, int width, int height) {
+        GLES20.glUseProgram(programId);
+
+        float[] points = new float[poseResult.foundLandmarks.length * 2];
+        for (int i = 0; i < poseResult.foundLandmarks.length; i++) {
+            Point p = poseResult.foundLandmarks[i];
+            if (p != null) {
+                points[i * 2] = (float)p.x / width;
+                points[i * 2 + 1] = (1 - (float)p.y / height);
+            }
+        }
+        GLES20.glUniform2fv(GLES20.glGetUniformLocation(programId, "feauturesFace"), points.length / 2, points, 0);
+        GLES20.glUniform2f(GLES20.glGetUniformLocation(programId, "sizeScreen"), width, height);
+
+        FloatBuffer vertexData = convertArray(new float[]{
+                -1, -1,
+                -1,  1,
+                1, -1,
+                1,  1
+        });
+
+        FloatBuffer texData = convertArray(new float[] {
+                0,  0,
+                0,  1,
+                1,  0,
+                1,  1
+        });
+
+        GLES20.glVertexAttribPointer(poss, 2, GLES20.GL_FLOAT, false, 0, vertexData);
+        GLES20.glVertexAttribPointer(texx,  2, GLES20.GL_FLOAT, false, 0, texData);
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texIn);
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(programId, "sTexture"), 0);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        GLES20.glFlush(); //?
+    }
+
 }
