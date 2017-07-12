@@ -1,4 +1,4 @@
-package ru.flightlabs.masks.renderer;
+package ru.flightlabs.masks.renderer.test;
 
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
@@ -8,6 +8,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import ru.flightlabs.masks.Static;
+import ru.flightlabs.masks.model3d.test.CubeTest;
 
 /**
  * Created by sov on 10.12.2016.

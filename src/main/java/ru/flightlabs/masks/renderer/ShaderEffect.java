@@ -6,6 +6,7 @@ import android.util.Log;
 
 import ru.flightlabs.commonlib.R;
 import ru.flightlabs.masks.Static;
+import ru.flightlabs.masks.model3d.Model;
 import ru.flightlabs.masks.utils.FileUtils;
 import ru.flightlabs.masks.utils.PoseHelper;
 import ru.flightlabs.masks.utils.ShaderUtils;

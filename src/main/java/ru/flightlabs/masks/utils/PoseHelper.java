@@ -11,10 +11,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
-import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -26,7 +24,7 @@ import ru.flightlabs.commonlib.Settings;
 import ru.flightlabs.masks.CompModel;
 import ru.flightlabs.masks.DetectionBasedTracker;
 import ru.flightlabs.masks.Static;
-import ru.flightlabs.masks.renderer.Model;
+import ru.flightlabs.masks.model3d.Model;
 
 /**
  * Created by sov on 06.01.2017.

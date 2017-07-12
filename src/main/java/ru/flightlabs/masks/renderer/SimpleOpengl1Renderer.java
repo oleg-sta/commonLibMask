@@ -31,6 +31,7 @@ import javax.microedition.khronos.opengles.GL10;
 import ru.flightlabs.commonlib.R;
 import ru.flightlabs.commonlib.Settings;
 import ru.flightlabs.masks.Static;
+import ru.flightlabs.masks.model3d.Model;
 import ru.flightlabs.masks.utils.PoseHelper;
 
 /**

@@ -2,7 +2,6 @@ package ru.flightlabs.masks.renderer;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Rect;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
@@ -16,14 +15,11 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -32,8 +28,6 @@ import ru.flightlabs.commonlib.R;
 import ru.flightlabs.commonlib.Settings;
 import ru.flightlabs.masks.CompModel;
 import ru.flightlabs.masks.Static;
-import ru.flightlabs.masks.camera.CameraHelper;
-import ru.flightlabs.masks.camera.FastCameraView;
 import ru.flightlabs.masks.camera.FrameCamera;
 import ru.flightlabs.masks.utils.FileUtils;
 import ru.flightlabs.masks.utils.OpencvUtils;

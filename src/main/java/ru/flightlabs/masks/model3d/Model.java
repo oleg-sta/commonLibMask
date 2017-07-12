@@ -1,4 +1,4 @@
-package ru.flightlabs.masks.renderer;
+package ru.flightlabs.masks.model3d;
 
 import android.content.Context;
 import android.util.Log;
@@ -28,8 +28,8 @@ import ru.flightlabs.masks.Static;
 public class Model {
 
     // Constants
-    private static final int FLOAT_SIZE_BYTES = 4;
-    private static final int SHORT_SIZE_BYTES = 2;
+    public static final int FLOAT_SIZE_BYTES = 4;
+    public static final int SHORT_SIZE_BYTES = 2;
 
     private FloatBuffer _vb;
     private FloatBuffer _nb;
@@ -39,14 +39,19 @@ public class Model {
     public short[] indices;
 
     public float[] tempV;
-    private float[] tempVt;
-    private float[] tempVn;
+    protected float[] tempVt;
+    protected float[] tempVn;
 
-    private ArrayList<Vector3D> vertices;
-    private ArrayList<Vector3D> vertexTexture;
+    protected ArrayList<Vector3D> vertices;
+    protected ArrayList<Vector3D> vertexTexture;
     private ArrayList<Vector3D> vertexNormal;
-    private ArrayList<Face> faces;
-    private int vertexCount;
+    protected ArrayList<Face> faces;
+
+    public int getVertexCount() {
+        return vertexCount;
+    }
+
+    protected int vertexCount;
 
     private ArrayList<GroupObject> groupObjects;
 
@@ -271,7 +276,7 @@ public class Model {
 
     }
 
-    private void fillInBuffers() {
+    protected void fillInBuffers() {
 
         int facesSize = faces.size();
 
@@ -331,16 +336,7 @@ public class Model {
         }
 
         recalcV();
-
-        _tcb = ByteBuffer.allocateDirect(tempVt.length * FLOAT_SIZE_BYTES)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        _tcb.put(tempVt);
-        _tcb.position(0);
-
-        _ib = ByteBuffer.allocateDirect(indices.length * SHORT_SIZE_BYTES)
-                .order(ByteOrder.nativeOrder()).asShortBuffer();
-        _ib.put(indices);
-        _ib.position(0);
+        calcBuffer();
     }
 
     // little hack while textures not fixed
@@ -412,7 +408,21 @@ public class Model {
         }
 
         recalcV();
+        calcBufferN();
+    }
 
+    protected void calcBuffer() {
+        _tcb = ByteBuffer.allocateDirect(tempVt.length * FLOAT_SIZE_BYTES)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+        _tcb.put(tempVt);
+        _tcb.position(0);
+
+        _ib = ByteBuffer.allocateDirect(indices.length * SHORT_SIZE_BYTES)
+                .order(ByteOrder.nativeOrder()).asShortBuffer();
+        _ib.put(indices);
+        _ib.position(0);
+    }
+    protected void calcBufferN() {
         _tcb = ByteBuffer.allocateDirect(tempVt.length * FLOAT_SIZE_BYTES)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         _tcb.put(tempVt);

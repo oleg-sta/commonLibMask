@@ -1,4 +1,4 @@
-package ru.flightlabs.masks.renderer;
+package ru.flightlabs.masks.model3d.test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

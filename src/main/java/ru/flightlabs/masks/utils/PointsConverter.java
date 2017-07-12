@@ -7,11 +7,10 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Point3;
-import org.opencv.video.Video;
 
 import ru.flightlabs.masks.Static;
 import ru.flightlabs.masks.model.primitives.Triangle;
-import ru.flightlabs.masks.renderer.Model;
+import ru.flightlabs.masks.model3d.Model;
 
 /**
  * Created by sov on 08.02.2017.
