@@ -61,6 +61,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
     int texRgba[] = new int[2];
     int fboRgba[] = new int[2];
+    int[] renId = new int[1]; // depth for 3d
 
     ByteBuffer bufferY;
     ByteBuffer bufferUV;
@@ -307,7 +308,11 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
             //GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[1]);
             GLES20.glViewport(0, 0, widthSurf, heightSurf);
+            //GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
             shaderHelper.makeShaderMask(Static.newIndexEye, poseResult, widthSurf, heightSurf, texRgba[0], time, iGlobTime);
+            //GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
             // copy from middle buffer
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -390,10 +395,10 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
 
         GLES20.glGenFramebuffers(2, fboRgba, 0);
+        GLES20.glGenRenderbuffers(1, renId, 0);
         if (Static.LOG_MODE) Log.i(TAG, "onSurfaceCreated4 " + fboRgba[0]);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[0]);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, texRgba[0], 0);
-
 
         // second frame buffer and texture
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texRgba[1]);
@@ -405,6 +410,9 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[1]);
         GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, texRgba[1], 0);
 
+        GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, renId[0]);
+        GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER, GLES20.GL_DEPTH_COMPONENT16, width, height);
+        GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT, GLES20.GL_RENDERBUFFER, renId[0]);
 
 
         if (Static.LOG_MODE) Log.i(TAG, " fbo status " + GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER));
