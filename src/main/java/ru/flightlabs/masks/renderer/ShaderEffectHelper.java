@@ -88,12 +88,6 @@ public class ShaderEffectHelper {
 
     public static void shaderEffect3d2(float[] matrixView, int texIn, int width, int height, final ModelNew modelToDraw, int modelTextureId, float alpha, int programId, int vPos3d, int vTexFor3d, float[] ortho, int vTexFor3dortho, boolean flagOrtho, Mat initialParams) {
 
-        // temp for fixing depth
-        GLES20.glEnable( GLES20.GL_DEPTH_TEST );
-        GLES20.glDepthFunc( GLES20.GL_LEQUAL );
-        GLES20.glDepthMask( true );
-        //GLES20.glClearDepthf(1000.0f);
-
         Log.i(TAG, "shaderEffect3d" + modelToDraw.getClass().getName());
         GLES20.glUseProgram(programId);
         int matrixMvp = GLES20.glGetUniformLocation(programId, "u_MVPMatrix");
@@ -144,8 +138,6 @@ public class ShaderEffectHelper {
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, modelToDraw.getVertexCount());
         GLES20.glFlush();
-
-        GLES20.glDisable( GLES20.GL_DEPTH_TEST );
     }
 
     public static void shaderEffect3d(float[] matrixView, int texIn, int width, int height, final Model modelToDraw, int modelTextureId, float alpha, int programId, int vPos3d, int vTexFor3d) {

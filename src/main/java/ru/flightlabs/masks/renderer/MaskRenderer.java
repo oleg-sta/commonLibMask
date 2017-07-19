@@ -305,14 +305,11 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
             }
             // draw effect on rgba
-            //GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fboRgba[1]);
             GLES20.glViewport(0, 0, widthSurf, heightSurf);
-            //GLES20.glEnable(GLES20.GL_DEPTH_TEST);
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
             shaderHelper.makeShaderMask(Static.newIndexEye, poseResult, widthSurf, heightSurf, texRgba[0], time, iGlobTime);
-            //GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
             // copy from middle buffer
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
