@@ -51,6 +51,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
     int iGlobTime = 0;
     Activity context;
+    Callback callback;
 
     int programNv21ToRgba;
     int texNV21FromCamera[] = new int[2];
@@ -107,10 +108,11 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
         }
     };
 
-    public MaskRenderer(Activity context, CompModel compModel, ShaderEffect shaderHelper) {
+    public MaskRenderer(Activity context, CompModel compModel, ShaderEffect shaderHelper, Callback callback) {
         this.context = context;
         this.compModel = compModel;
         this.shaderHelper = shaderHelper;
+        this.callback = callback;
     }
 
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -336,17 +338,7 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
                 final String fileName = PhotoMaker.makePhoto(rgba, context);
                 rgba.release();
                 // TODO change view
-                context.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast toast = Toast.makeText(context, R.string.photo_saved, Toast.LENGTH_SHORT);
-                        toast.show();
-                        Intent intent =  new Intent(context, Settings.clazz);
-                        intent.putExtra(Settings.PHOTO, fileName);
-                        context.startActivity(intent);
-                    }
-                });
-
+                callback.photoSaved();
             }
         }
 
@@ -452,5 +444,9 @@ public class MaskRenderer implements GLSurfaceView.Renderer {
 
     public boolean isCapturingStarted() {
         return videoCapture.isStarted();
+    }
+
+    public interface Callback {
+        void photoSaved();
     }
 }

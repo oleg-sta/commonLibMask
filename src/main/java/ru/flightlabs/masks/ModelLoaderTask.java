@@ -61,46 +61,7 @@ public class ModelLoaderTask extends AsyncTask<CompModel, Void, Void> {
         //lines = modelFrom.getLines();
         if (Static.LOG_MODE) Log.i(TAG, "ModelLoaderTask doInBackground4");
         // load ready triangulation model from file
-        List<Line> linesArr = new ArrayList<Line>();
-        List<Triangle> triangleArr = new ArrayList<Triangle>();
         AssetManager assetManager = compModel.context.getAssets();
-        try {
-            {
-                InputStream ims = assetManager.open("bear_lines_68.txt");
-                BufferedReader in = new BufferedReader(new InputStreamReader(ims));
-                String line = null;
-                while ((line = in.readLine()) != null) {
-                    String[] spl = line.split(";");
-                    if (spl.length == 2) {
-                        linesArr.add(new Line(Integer.parseInt(spl[0]), Integer.parseInt(spl[1])));
-                    }
-                }
-                ims.close();
-            }
-            {
-                InputStream ims = assetManager.open("bear_triangles_68.txt");
-                BufferedReader in = new BufferedReader(new InputStreamReader(ims));
-                String line = null;
-                while ((line = in.readLine()) != null) {
-                    String[] spl = line.split(";");
-                    if (spl.length == 3) {
-                        triangleArr.add(new Triangle(Integer.parseInt(spl[0]), Integer.parseInt(spl[1]), Integer
-                                .parseInt(spl[2])));
-                    }
-                }
-                ims.close();
-            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        compModel.lines = linesArr.toArray(new Line[0]);
-//            Triangulation trianglation = new DelaunayTriangulation();
-//            lines = trianglation.convertToTriangle(pointsWas, lines);
-
-        if (Static.LOG_MODE) Log.i(TAG, "ModelLoaderTask doInBackground5");
-        // load triangles from model
-        compModel.trianlges = triangleArr.toArray(new Triangle[0]);
         //trianlges = StupidTriangleModel.getTriagles(pointsWas, lines);
         if (Static.LOG_MODE) Log.i(TAG, "ModelLoaderTask doInBackground6");
 

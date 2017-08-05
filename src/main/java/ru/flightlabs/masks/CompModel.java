@@ -26,8 +26,6 @@ public class CompModel {
 
     public CascadeClassifier mJavaDetector;
     public volatile DetectionBasedTracker mNativeDetector;
-    public Line[] lines;
-    public Triangle[] trianlges;
     public File mCascadeFile;
 
     public File lbpFrontalPath;
