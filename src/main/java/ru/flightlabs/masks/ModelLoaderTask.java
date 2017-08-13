@@ -36,9 +36,11 @@ public class ModelLoaderTask extends AsyncTask<CompModel, Void, Void> {
 
     public ModelLoaderTask(Callback callback) {
         this.callback = callback;
+        if (Static.LOG_MODE) Log.i(TAG, "ModelLoaderTask constr");
     }
     @Override
     protected Void doInBackground(CompModel... params) {
+        if (Static.LOG_MODE) Log.i(TAG, "ModelLoaderTask doInBackground0");
         compModel = params[0];
         if (Static.LOG_MODE) Log.i(TAG, "ModelLoaderTask doInBackground");
         File cascadeDir = compModel.context.getDir("cascade", Context.MODE_PRIVATE);

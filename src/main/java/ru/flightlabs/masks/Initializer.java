@@ -1,6 +1,8 @@
 package ru.flightlabs.masks;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.util.Log;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -53,8 +55,16 @@ public class Initializer {
     }
 
     public void init() {
+        if (Static.LOG_MODE) Log.i(TAG, "init ...");
         OpenCVLoader.initDebug();
+        if (Static.LOG_MODE) Log.i(TAG, "init2 ...");
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-        new ModelLoaderTask(cllbacker).execute(compModel);
+        if (Static.LOG_MODE) Log.i(TAG, "init3 ...");
+        ModelLoaderTask modelLoaderTask = new ModelLoaderTask(cllbacker);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            modelLoaderTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, compModel);
+        } else {
+            modelLoaderTask.execute(compModel);
+        }
     }
 }

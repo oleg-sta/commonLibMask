@@ -36,6 +36,7 @@ public class CompModel {
     public Context context;
 
     public void load3lbpModels(int resource1, int resource2, int resource3) {
+        if (Static.LOG_MODE) Log.i(TAG, "load3lbpModels");
         File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
         lbpFrontalPath = new File(cascadeDir, "lbpFrontalPath.xml");
         lbpLeftPath = new File(cascadeDir, "lbpLeftPath.xml");
@@ -47,11 +48,13 @@ public class CompModel {
         } catch (Resources.NotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            if (Static.LOG_MODE) Log.i(TAG, "load3lbpModels error "+ e.getMessage());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+            if (Static.LOG_MODE) Log.i(TAG, "load3lbpModels error "+ e.getMessage());
         }
-
+        if (Static.LOG_MODE) Log.i(TAG, "load3lbpModels end");
     }
     public void loadHaarModel(int resource) {
         if (Static.LOG_MODE) Log.i(TAG, "loadHaarModel " + context.getResources().getResourceName(resource));
