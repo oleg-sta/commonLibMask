@@ -1,7 +1,5 @@
 package ru.flightlabs.masks;
 
-import android.support.v4.BuildConfig;
-
 import org.opencv.core.Mat;
 
 import ru.flightlabs.commonlib.R;
@@ -15,7 +13,7 @@ public class Static {
     public static boolean makePhoto;
     public static boolean makePhoto2;
 
-    public static final boolean LOG_MODE = BuildConfig.DEBUG;
+    public static final boolean LOG_MODE = true;//BuildConfig.DEBUG;
 
     public static boolean drawOrigTexture;
     public static boolean libsLoaded;
