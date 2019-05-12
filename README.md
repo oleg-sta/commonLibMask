@@ -22,7 +22,7 @@ shape coefficients. Then it is used android glsl to create 3d effect on camera s
 
 ## Settings
 
-You have to manually download dlib sources from here https://github.com/davisking/dlib/tree/master/dlib. Put it in https://github.com/oleg-sta/commonLibMask/tree/master/src/main/jni dlib dir. I didn't put sources to repository because there a lot of codes and didn't figured out how to use it as dependency. Yes, it's bad, but I made simple bad solution.
+You have to manually download dlib sources from here https://github.com/davisking/dlib/tree/master/dlib. Put it in https://github.com/oleg-sta/commonLibMask/tree/master/src/main/jni dlib dir. I didn't put sources to repository because there a lot of codes and didn't figure out how to use it as dependency. Yes, it's bad, but I made simple bad solution.
 
 ## How it works
 
