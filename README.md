@@ -22,7 +22,7 @@ shape coefficients. Then it is used android glsl to create 3d effect on camera s
 
 ## Settings
 
-You have to manually download dlib sources from here https://github.com/davisking/dlib/tree/master/dlib. Put it in https://github.com/oleg-sta/commonLibMask/tree/master/src/main/jni dlib dir. I didn't put sources to repository because there a lot of codes and didn't figured out how to use it as dependency.
+You have to manually download dlib sources from here https://github.com/davisking/dlib/tree/master/dlib. Put it in https://github.com/oleg-sta/commonLibMask/tree/master/src/main/jni dlib dir. I didn't put sources to repository because there a lot of codes and didn't figured out how to use it as dependency. Yes, it's bad, but I made simple bad solution.
 
 ## How it works
 
@@ -34,7 +34,7 @@ Here you could find how to work with camera. Main class is [FastCameraView](http
 
 ### Finding face on frame
 
-Here used OpenCV library with Haar Cascades. You could read about this [here](https://docs.opencv.org/3.4.1/d7/d8b/tutorial_py_face_detection.html)
+Here used OpenCV library with Haar Cascades. You could read about this [here](https://docs.opencv.org/3.4.1/d7/d8b/tutorial_py_face_detection.html).
 
 ### Finding points on face
 
@@ -43,12 +43,16 @@ Vahid Kazemi and Josephine Sullivan, CVPR 2014](http://www.nada.kth.se/~sullivan
 
 ### Calculate face position and blendshapes
 
-There is 3d-model of face with blendshape, you could download this ...
+When we have points on face we need to calculate position on blend (e.g. opened jaw) on 3d model. All main magic in [DetectionBasedTracker_jni](https://github.com/oleg-sta/commonLibMask/blob/master/src/main/jni/DetectionBasedTracker_jni.cpp) method Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace. We calculate approximate position of 3d model by solving equation:<br/>
+dst=argminX∥src1⋅X−src2∥ by SVD decomposition, you could find [here](https://docs.opencv.org/3.1.0/d2/de8/group__core__array.html#ga12b43690dbd31fed96f213eefead2373)
+
+Then we have to find coefficient for morphing face also solving almost the same equation dst=argminX∥src1⋅X−src2∥ by SVD decomposition.
+By the output you have 3d model with position in space, with blends coefficient.
 
 ### Draw by OpenGL
 
-On Android you could use OpenGL for high performance 3d or 3d graphics. I used OpenGL 2.0 you could find examples in other project here ...
+Al least you have to draw all on the screen. Here I use OpenGL.
 
 ## How to use it
 
-Example of use you could find by link: ...
+Example of use you could find [here](https://github.com/oleg-sta/Masks)
