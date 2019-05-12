@@ -26,11 +26,11 @@ You have to manually download dlib sources from here https://github.com/daviskin
 
 ## How it works
 
-Here you can find a explaining how this library works. It integrates a lot of different fields: working with camera, machine learning algorithms for finding face and points on it, mathematics - to find position in space and morphings and finally OpenGL to draw fastly on screen.
+Here you can find an explaining how this library works. It integrates a lot of different fields: working with camera, machine learning algorithms for finding face and points on it, mathematics (SVD decomposition) - to find position in space and morphings and finally OpenGL to draw it fastly on a screen.
 
 ### Working with camera
 
-Here you could find how to work with camera. Main class is [FastCameraView](https://github.com/oleg-sta/commonLibMask/blob/master/src/main/java/ru/flightlabs/masks/camera/FastCameraView.java)
+First start with camera. Main class is [FastCameraView](https://github.com/oleg-sta/commonLibMask/blob/master/src/main/java/ru/flightlabs/masks/camera/FastCameraView.java). 
 
 ### Finding face on frame
 
@@ -43,7 +43,7 @@ Vahid Kazemi and Josephine Sullivan, CVPR 2014](http://www.nada.kth.se/~sullivan
 
 ### Calculate face position and blendshapes
 
-When we have points on face we need to calculate position on blend (e.g. opened jaw) on 3d model. All main magic in [DetectionBasedTracker_jni](https://github.com/oleg-sta/commonLibMask/blob/master/src/main/jni/DetectionBasedTracker_jni.cpp) method Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace. We calculate approximate position of 3d model by solving equation:<br/>
+When we have points on face on 2d model we need to calculate position and blends coefficient (e.g. opened jaw) on 3d model. All main magic is in [DetectionBasedTracker_jni](https://github.com/oleg-sta/commonLibMask/blob/master/src/main/jni/DetectionBasedTracker_jni.cpp) method Java_ru_flightlabs_masks_DetectionBasedTracker_morhpFace. We calculate approximate position of 3d model by solving equation:<br/>
 dst=argminX∥src1⋅X−src2∥ by SVD decomposition, you could find [here](https://docs.opencv.org/3.1.0/d2/de8/group__core__array.html#ga12b43690dbd31fed96f213eefead2373)
 
 Then we have to find coefficient for morphing face also solving almost the same equation dst=argminX∥src1⋅X−src2∥ by SVD decomposition.
